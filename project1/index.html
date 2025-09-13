@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CS280A: Project 0 — Part 1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --ink:#0f1a2b; --muted:#5a6b7c; --card:#f7f9fb; --line:#e4ecf3; --accent:#0ea5e9;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, sans-serif;
+      margin: 20px; line-height: 1.6; color: var(--ink);
+    }
+    h1{margin: 0 0 8px}
+    .muted{color:var(--muted)}
+    section.card{
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 16px 18px; margin: 16px 0;
+    }
+    ol{margin: 8px 0 0 22px}
+    figure{
+      display: inline-block; margin: 14px; text-align: center;
+      background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px;
+    }
+    figure img{display:block; width:400px; height:auto; border-radius:6px}
+    figcaption{margin-top:6px; font-size:14px; color:var(--muted)}
+    .grid{display:flex; flex-wrap:wrap; gap:6px}
+    table{
+      width:100%; border-collapse: collapse; margin-top:8px; font-size:15px;
+    }
+    th, td{border:1px solid var(--line); padding:8px 10px; text-align:center}
+    th{background:#eef6ff}
+    .badge{
+      display:inline-block; background:#eef6ff; color:#084b74; padding:4px 8px; border-radius:999px;
+      border:1px solid #cfe7ff; font-size:12px; margin-left:8px;
+    }
+    .note{font-size:14px; color:var(--muted)}
+  </style>
+</head>
+<body>
+
+  <h1>Part 1: Single-scale alignment <span class="badge">Exhaustive Search + L2</span></h1>
+  <p class="muted">
+    Results on <i>cathedral</i>, <i>monastery</i>, and <i>tobolsk</i> using a single-scale (brute-force) alignment.
+    Below is the concise method description and the aligned images.
+  </p>
+
+  <section class="card">
+    <h3 style="margin:6px 0 6px">Method (single scale)</h3>
+    <ol>
+      <li><b>Split channels:</b> the stacked plate is divided into B (top), G (middle), R (bottom).</li>
+      <li><b>Edge preprocessing:</b> apply a light Gaussian blur (\(\sigma \approx 1\)) then Sobel to both
+          reference (B) and target (G/R) to obtain edge maps. Edges make the metric robust to exposure changes.</li>
+      <li><b>Center crop:</b> compare only the central ~85% to suppress border artifacts.</li>
+      <li><b>Search window:</b> test all integer translations \((d_y,d_x)\in[-15,15]^2\) for G→B and R→B.</li>
+      <li><b>Score:</b> L2 on the cropped edge maps; choose the shift with the minimum score.</li>
+      <li><b>Apply shift & stack:</b> shift the <i>raw</i> target channel by the winning \((d_y,d_x)\), then stack into RGB.</li>
+      <li><b>Display only:</b> contrast stretching (1–99%) and gray-world white balance to make the image look natural.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h3 style="margin:6px 0 10px">Displacements (single-scale)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>G → B (dy, dx)</th>
+          <th>R → B (dy, dx)</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>cathedral</td><td>(5,2)</td><td>(12,3)</td><td>Aligned well</td></tr>
+        <tr><td>monastery</td><td>(-3,2)</td><td>(3,2)</td><td>Aligned well</td></tr>
+        <tr><td>tobolsk</td><td>(3,3)</td><td>(6,3)</td><td>Aligned well</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="grid">
+    <figure>
+      <img src="./media/cathedral_processed.jpg" alt="Cathedral (single-scale, aligned)">
+      <figcaption>Cathedral — single-scale result (aligned RGB)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/monastery_processed.jpg" alt="Monastery (single-scale, aligned)">
+      <figcaption>Monastery — single-scale result (aligned RGB)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/tobolsk_processed.jpg" alt="Tobolsk (single-scale, aligned)">
+      <figcaption>Tobolsk — single-scale result (aligned RGB)</figcaption>
+    </figure>
+  </div>
+
+  <!-- (Optional) If you want to include LaTeX above, keep MathJax; safe to remove otherwise. -->
+  <script>
+    window.MathJax = { tex: {inlineMath: [['\\(','\\)'], ['$', '$']]} };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</body>
+
+
+<body>
+  <h1>Part 2: Multi-scale pyramid alignment <span class="badge">Pyramid Search + L2</span></h1>
+  <p class="muted">
+    Results on <i>church</i>, <i>emir</i>, <i>harvesters</i>, <i>icon</i>, <i>italil</i>, <i>lastochikino</i>, <i>lugano</i>, <i>melons</i>, <i>self portrait</i>, <i>siren</i>, and <i>three generations</i> using a pyramid search alignment.
+  </p>
+  <p class="muted">
+    In this implementation, I did not use Laplacian or Gaussian pyramids for automatic channel alignment. The multi-scale alignment procedure is based on simple downsampling and upsampling of the image channels (i.e., an image pyramid created by resizing), rather than on Laplacian or Gaussian pyramid decomposition.
+
+    <b>The Gaussian operator in my code is used only for feature enhancement during similarity evaluation</b>. Specifically, it helps emphasize edges and structural details in the image, which makes the similarity score less sensitive to illumination differences and global intensity variations. This improves robustness of the alignment search but is not related to a true Laplacian/Gaussian pyramid representation.
+  </p>
+  
+
+  <section class="card">
+      <h3 style="margin:6px 0 6px">Method (multi scale)</h3>
+      <ol>
+        <li><b>Pyramid construction:</b> Downscale both the reference (\(B\)) and target (\(G/R\)) by a factor of \(0.5\)
+            with anti-aliasing to build \(L\) levels (e.g., \(5\text{–}6\) for large TIFFs).  
+            Level \(0 =\) finest (original); level \(L-1 =\) coarsest.</li>
+
+        <li><b>Initialize:</b> At the coarsest level, set the displacement to \((dy, dx) = (0,0)\).</li>
+
+        <li><b>Coarse-to-fine loop:</b> For \(\ell = L-1 \dots 0\)  
+            (a) pre-shift the target by the current estimate \((dy, dx)\);  
+            (b) run a <u>local search</u> in a small window (e.g., \(\pm 15\)) around this estimate;  
+            (c) pick the best local offset \((\Delta y, \Delta x)\).</li>
+
+        <li><b>Score (L2):</b> Evaluate the similarity on
+            <i>edge maps</i> (Gaussian + Sobel) within a center crop (\(\approx 85\%\)) to suppress border artifacts and reduce sensitivity to illumination differences.</li>
+
+        <li><b>Update & propagate:</b> Add the local offset to the estimate:  
+            \((dy, dx) \leftarrow (dy + \Delta y, dx + \Delta x)\).  
+            Before moving to the next (finer) level, <b>double</b> the estimate to account for the \(2\times\) change in scale:  
+            \((dy, dx) \leftarrow (2 \cdot dy, 2 \cdot dx)\).</li>
+
+        <li><b>Finalize:</b> At the finest level (original resolution), apply the final
+            \((dy, dx)\) to the <i>raw</i> target channel and stack channels into \(RGB\)  
+            (optionally followed by auto-crop / contrast stretching / gray-world WB for display).</li>
+
+        <li><b>Why multi-scale:</b> Large unknown shifts at full resolution become small shifts at coarse levels,
+            yielding large speedups and better convergence compared to single-scale exhaustive search.</li>
+      </ol>
+      <p style="color:#555; font-size:14px; margin-top:8px;">
+        Typical settings used: \(5\text{–}6\) levels; local window \(\pm 15\) at fine levels (smaller at coarse levels);  
+        center-crop \(\approx 0.85\); Gaussian \(\sigma \approx 1\) before Sobel.
+      </p>
+    </section>
+
+
+  <section class="card">
+    <h3 style="margin:6px 0 10px">Displacements (multi-scale)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>G → B (dy, dx)</th>
+          <th>R → B (dy, dx)</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Church</td><td>(25,4)</td><td>(58,-4)</td><td>Aligned well</td></tr>
+        <tr><td>Emir</td><td>(49,23)</td><td>(107,40)</td><td>Aligned well</td></tr>
+        <tr><td>Harvesters</td><td>(60,17)</td><td>(123,13)</td><td>Aligned well</td></tr>
+        <tr><td>Icon</td><td>(42,17)</td><td>(90,23)</td><td>Aligned well</td></tr>
+        <tr><td>Italil</td><td>(38,22)</td><td>(77,36)</td><td>Aligned well</td></tr>
+        <tr><td>Lastochikino</td><td>(-3,-2)</td><td>(76,-8)</td><td>Aligned well</td></tr>
+        <tr><td>Lugano</td><td>(41,-17)</td><td>(92,-29)</td><td>Aligned well</td></tr>
+        <tr><td>Melons</td><td>(80,10)</td><td>(177,12)</td><td>Aligned well</td></tr>
+        <tr><td>Self portrait</td><td>(78,29)</td><td>(176,37)</td><td>Aligned well</td></tr>
+        <tr><td>Siren</td><td>(49,-6)</td><td>(96,-25)</td><td>Aligned well</td></tr>
+        <tr><td>Three generations</td><td>(54,13)</td><td>(111,9)</td><td>Aligned well</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="grid">
+    <figure>
+      <img src="./media/church_processed.jpg" alt="Church (multi-scale, aligned)">
+      <figcaption>Church — multi-scale result (aligned RGB)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/emir_processed.jpg" alt="Emir (multi-scale, aligned)">
+      <figcaption>Emir — multi-scale result (aligned RGB)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/harvesters_processed.jpg" alt="harvesters (multi-scale, aligned)">
+      <figcaption>Harvesters — multi-scale result (aligned RGB)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/icon_processed.jpg" alt="icon (multi-scale, aligned)">
+      <figcaption>Icon — multi-scale result (aligned RGB)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/italil_processed.jpg" alt="italil (multi-scale, aligned)">
+      <figcaption>Italil — multi-scale result (aligned RGB)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/Lastochikino_processed.jpg" alt="Lastochikino (multi-scale, aligned)">
+      <figcaption>Lastochikino — multi-scale result (aligned RGB)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/lugano_processed.jpg" alt="Lugano (multi-scale, aligned)">
+      <figcaption>Lugano — multi-scale result (aligned RGB)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/melons_processed.jpg" alt="Melons (multi-scale, aligned)">
+      <figcaption>Melons — multi-scale result (aligned RGB)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/self_portrait_processed.jpg" alt="self portrait (multi-scale, aligned)">
+      <figcaption>Self portrait — multi-scale result (aligned RGB)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/siren_processed.jpg" alt="Siren (multi-scale, aligned)">
+      <figcaption>Siren — multi-scale result (aligned RGB)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/three_generations_processed.jpg" alt="Three genertaions (multi-scale, aligned)">
+      <figcaption>Three generations — multi-scale result (aligned RGB)</figcaption>
+    </figure>
+  </div>
+
+  <!-- (Optional) If you want to include LaTeX above, keep MathJax; safe to remove otherwise. -->
+  <script>
+    window.MathJax = { tex: {inlineMath: [['\\(','\\)'], ['$', '$']]} };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</body>
+
+
+
+
+
+
+</html>
