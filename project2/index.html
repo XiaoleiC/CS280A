@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CS280A — Project 2: Filters, Frequencies & Hybrid Images</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{ --ink:#0f1a2b; --muted:#5a6b7c; --card:#f7f9fb; --line:#e4ecf3; --accent:#0ea5e9; }
+    *{box-sizing:border-box}
+    body{font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, sans-serif; margin: 20px; line-height: 1.6; color: var(--ink)}
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    h1,h2,h3{margin: 0 0 10px}
+    .muted{color:var(--muted)}
+    .toc{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0}
+    .pill{display:inline-block; padding:6px 10px; background:#eef6ff; color:#084b74; border:1px solid #cfe7ff; border-radius:999px; font-size:13px}
+    section.card{background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin: 16px 0}
+    ol{margin: 8px 0 0 22px}
+    .grid{display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px; align-items:start}
+    figure{margin:0; background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px; height:100%}
+    figure img{display:block; width:100%; height:auto; border-radius:6px}
+    figcaption{margin-top:6px; font-size:14px; color:var(--muted)}
+    table{width:100%; border-collapse: collapse; margin-top:8px; font-size:15px}
+    th, td{border:1px solid var(--line); padding:8px 10px; text-align:center}
+    th{background:#eef6ff}
+    .hr{height:1px; background:var(--line); margin:24px 0}
+    .note{font-size:14px; color:var(--muted)}
+    code.inline{background:#f3f6fa; border:1px solid var(--line); padding:1px 5px; border-radius:6px}
+    .two{display:grid; grid-template-columns: repeat(auto-fit, minmax(320px,1fr)); gap:14px}
+  </style>
+</head>
+<body>
+  <h1>CS280A — Project 2</h1>
+
+  <nav class="toc">
+    <a class="pill" href="#part1">Part 1: Fun with Filters</a>
+    <a class="pill" href="#part2">Part 2: Fun with Frequencies</a>
+  </nav>
+
+  <!-- ======================= Part 1 ======================= -->
+  <a id="part1"></a>
+  <h2>Part 1: Fun with Filters</h2>
+  <p class="muted">We implement convolutions from scratch, finite differences for edges, Derivative of Gaussian (DoG), and a HSV orientation visualization.</p>
+
+  <section class="card">
+    <h3>1.1 Convolutions from Scratch</h3>
+    <ol>
+      <li>Zero padding helper and two convolution variants (<code class="inline">four_loops</code> & <code class="inline">two_loops</code>); compare to <code class="inline">scipy.signal.convolve2d</code>.</li>
+      <li>Test with a 9×9 box filter; report max absolute diff vs. SciPy.</li>
+    </ol>
+    <div class="grid">
+      <figure><img src="./part1/selfie_four_loops.png" alt="Box blur — four loops"><figcaption>Box blur — four loops</figcaption></figure>
+      <figure><img src="./part1/selfie_two_loops.png" alt="Box blur — two loops"><figcaption>Box blur — two loops</figcaption></figure>
+      <figure><img src="./part1/selfie_conv2d.png" alt="Box blur — SciPy"><figcaption>Box blur — SciPy</figcaption></figure>
+    </div>
+    <div class="grid">
+      <figure><img src="./part1/cameraman_four_loops.png" alt="Box blur — four loops"><figcaption>Box blur — four loops</figcaption></figure>
+      <figure><img src="./part1/cameraman_two_loops.png" alt="Box blur — two loops"><figcaption>Box blur — two loops</figcaption></figure>
+      <figure><img src="./part1/cameraman_conv2d.png" alt="Box blur — SciPy"><figcaption>Box blur — SciPy</figcaption></figure>
+    </div>
+  </section>
+
+
+
+  <section class="card">
+    <h3>1.2 Finite Difference Operator</h3>
+    <p>Use \(D_x=[1,\ 0,\ -1]\) and \(D_y=D_x^T\) to compute partial derivatives, gradient magnitude, and a percentile‑based edge map.</p>
+    <div class="grid">
+      <figure><img src="./part1/selfie_Dx.png" alt="Ix"><figcaption>Partial derivative \(I_x\)</figcaption></figure>
+      <figure><img src="./part1/selfie_Dy.png" alt="Iy"><figcaption>Partial derivative \(I_y\)</figcaption></figure>
+      <figure><img src="./part1/selfie_gra_mag.png" alt="Grad mag"><figcaption>Gradient magnitude</figcaption></figure>
+      <figure><img src="./part1/selfie_bin_edge.png" alt="Edge map"><figcaption>Binary edge map</figcaption></figure>
+    </div>
+    <div class="grid">
+      <figure><img src="./part1/cameraman_Dx.png" alt="Ix"><figcaption>Partial derivative \(I_x\)</figcaption></figure>
+      <figure><img src="./part1/cameraman_Dy.png" alt="Iy"><figcaption>Partial derivative \(I_y\)</figcaption></figure>
+      <figure><img src="./part1/cameraman_gra_mag.png" alt="Grad mag"><figcaption>Gradient magnitude</figcaption></figure>
+      <figure><img src="./part1/cameraman_bin_edge.png" alt="Edge map"><figcaption>Binary edge map</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>1.3 Derivative of Gaussian (DoG)</h3>
+    <p>Compare two pipelines: (A) blur → finite differences vs. (B) convolve with DoG kernels once. They produce similar results but (B) is a single pass.</p>
+    <div class="grid">
+      <figure><img src="./part1/selfie_gaussian_blur.png" alt="Gaussian blur"><figcaption>Gaussian‑blurred image</figcaption></figure>
+      <figure><img src="./part1/selfie_gaussian_blur_gra_mag.png" alt="Grad after blur"><figcaption>Grad magnitude after smoothing</figcaption></figure>
+      <figure><img src="./part1/selfie_gaussian_blur_gra_mag_DoG.png" alt="DoG grad"><figcaption>Grad magnitude via DoG</figcaption></figure>
+    </div>
+    <div class="grid">
+      <figure><img src="./part1/cameraman_gaussian_blur.png" alt="Gaussian blur"><figcaption>Gaussian‑blurred image</figcaption></figure>
+      <figure><img src="./part1/cameraman_gaussian_gra_mag.png" alt="Grad after blur"><figcaption>Grad magnitude after smoothing</figcaption></figure>
+      <figure><img src="./part1/cameraman_gaussian_gra_mag_DoG.png" alt="DoG grad"><figcaption>Grad magnitude via DoG</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>Bells & Whistles — HSV Orientation</h3>
+    <p>Hue encodes orientation; value encodes gradient strength.</p>
+    <div class="grid">
+      <figure><img src="./part1/selfie_gra_HSV_RGB.png" alt="Orientation HSV"><figcaption>Orientation (HSV→RGB)</figcaption></figure>
+      <figure><img src="./part1/cameraman_gra_HSV_RGB.png" alt="Orientation HSV"><figcaption>Orientation (HSV→RGB)</figcaption></figure>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <!-- ======================= Part 2.1 ======================= -->
+  <a id="part2-1"></a>
+  <h2>Part 2.1: Image “Sharpening”</h2>
+<!--   <section class="card">
+    <h3>Method</h3>
+    <ol>
+      <li>Gaussian low‑pass with \(\sigma_h\), compute high‑freq residual: \(H = I - G_{\sigma_h}\*I\).</li>
+      <li>Blend: \(I_{\text{sharp}} = (1+\lambda)I - \lambda\,G_{\sigma_h}\*I\). Also show single‑kernel implementation.</li>
+      <li>Inspect frequency domain via 2‑D FFT log‑magnitude.</li>
+    </ol>
+  </section> -->
+
+  <div class="grid">
+    <figure><img src="./part2/taj_origin.png" alt="Original"><figcaption>Original</figcaption></figure>
+    <figure><img src="./part2/taj_gaussian_blur.png" alt="Gaussian blur"><figcaption>Gaussian blur</figcaption></figure>
+    <figure><img src="./part2/taj_unsharp_masked.png" alt="Unsharp masked"><figcaption>Unsharp masked</figcaption></figure>
+    <figure><img src="./part2/taj_unsharp_single_conv.png" alt="Single-kernel unsharp"><figcaption>Unsharp via single kernel</figcaption></figure>
+    <figure><img src="./part2/taj_sharpen_again.png" alt="Sharpened again"><figcaption>Sharpened again</figcaption></figure>
+  </div>
+
+  <section class="card">
+    <h3>Frequency analysis (log |FFT|)</h3>
+    <div class="grid">
+      <figure><img src="./part2/taj_fft_log_mag.png" alt="FFT original"><figcaption>FFT — original</figcaption></figure>
+      <figure><img src="./part2/taj_fft_log_mag_sharpening.png" alt="FFT after sharpening"><figcaption>FFT — after sharpening</figcaption></figure>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <!-- ======================= Part 2.2 ======================= -->
+  <a id="part2-2"></a>
+  <h2>Part 2.2: Hybrid Images <span class="pill">Low‑pass ⊕ High‑pass</span></h2>
+  We find that adding color can help the low-frequency components.
+
+  <div class="grid">
+    <figure><img src="./part2/hybrid_demo.png" alt="Low ref"><figcaption>Low‑frequency source (reference)</figcaption></figure>
+  </div>
+  <div class="grid">
+    <figure><img src="./part2/hybrid_demo_fft.png" alt="Low ref"><figcaption>Low‑frequency source (reference)</figcaption></figure>
+  </div>
+
+  <div class="grid">
+    <figure><img src="./part2/hybrid_demo_colors.png" alt="Low ref"><figcaption>Low‑frequency source with colors (reference)</figcaption></figure>
+  </div>
+  <div class="grid">
+    <figure><img src="./part2/hybrid_demo_fft_colors.png" alt="Low ref"><figcaption>Low‑frequency source with colors (reference)</figcaption></figure>
+  </div>
+
+  <h3 style="margin-top:22px">More Hybrid Examples</h3>
+  <div class="two">
+    <figure><img src="./part2/hybrid_selfie.png" alt="Hybrid example 2"><figcaption>Hybrid example #2</figcaption></figure>
+  </div>
+  <div class="two">
+    <figure><img src="./part2/hybrid_selfie_colors.png" alt="Hybrid example 3"><figcaption>Hybrid example #3</figcaption></figure>
+  </div>
+
+
+  <!-- Optional: MathJax if you keep LaTeX -->
+ <!--  <script>window.MathJax={tex:{inlineMath:[["\\(","\\)"],["$","$"]]}};</script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script> -->
+
+  <!-- ======================= Part 2.3 ======================= -->
+  <a id="part2-3"></a>
+  <h2>Part 2.3: Gaussian and Laplacian Stacks</h2>
+
+  <div class="grid">
+    <figure><img src="./part2.3/gaussian_stack_apple.png" alt="Low ref"><figcaption>Gaussian Stack for apples</figcaption></figure>
+  </div>
+  <div class="grid">
+    <figure><img src="./part2.3/gaussian_stack_orange.png" alt="Low ref"><figcaption>Gaussian Stack for oranges</figcaption></figure>
+  </div>
+
+  <div class="grid">
+    <figure><img src="./part2.3/laplacian_apple.png" alt="Low ref"><figcaption>Laplacian Stack for apples</figcaption></figure>
+  </div>
+  <div class="grid">
+    <figure><img src="./part2.3/laplacian_orange.png" alt="Low ref"><figcaption>Laplacian Stack for oranges</figcaption></figure>
+  </div>
+
+  <div class="grid">
+    <figure><img src="./part2.3/blend_orange_apple.png" alt="Low ref"><figcaption>Blending procedures</figcaption></figure>
+  </div>
+  <div class="grid">
+    <figure><img src="./part2.3/oraple.png" alt="Low ref"><figcaption>Oraple!</figcaption></figure>
+  </div>
+
+
+  <div class="grid">
+    <figure><img src="figure_342_repro.png" alt="Low ref"><figcaption>Reproduction of figure</figcaption></figure>
+  </div>
+
+
+  <div class="grid">
+    <figure><img src="./part2.3/circleblend_orange_apple.png" alt="Low ref"><figcaption>Blending procedures with circle mask</figcaption></figure>
+  </div>
+  <div class="grid">
+    <figure><img src="./part2.3/circleoraple.png" alt="Low ref"><figcaption>Oraple with circle mask</figcaption></figure>
+  </div>
+
+
+
+
+</body>
+</html>
