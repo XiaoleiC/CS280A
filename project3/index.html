@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CS280A — Project 3: Stitching Photo Mosaics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{ --ink:#0f1a2b; --muted:#5a6b7c; --card:#f7f9fb; --line:#e4ecf3; --accent:#0ea5e9; }
+    *{box-sizing:border-box}
+    body{font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, sans-serif; margin: 20px; line-height: 1.6; color: var(--ink)}
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    h1,h2,h3{margin: 0 0 10px}
+    .muted{color:var(--muted)}
+    .toc{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0}
+    .pill{display:inline-block; padding:6px 10px; background:#eef6ff; color:#084b74; border:1px solid #cfe7ff; border-radius:999px; font-size:13px}
+    section.card{background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin: 16px 0}
+    ol{margin: 8px 0 0 22px}
+    .grid{display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px; align-items:start}
+    figure{margin:0; background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px; height:100%}
+    figure img{display:block; width:100%; height:auto; border-radius:6px}
+    figcaption{margin-top:6px; font-size:14px; color:var(--muted)}
+    table{width:100%; border-collapse: collapse; margin-top:8px; font-size:15px}
+    th, td{border:1px solid var(--line); padding:8px 10px; text-align:center}
+    th{background:#eef6ff}
+    .hr{height:1px; background:var(--line); margin:24px 0}
+    .note{font-size:14px; color:var(--muted)}
+    code.inline{background:#f3f6fa; border:1px solid var(--line); padding:1px 5px; border-radius:6px}
+    .two{display:grid; grid-template-columns: repeat(auto-fit, minmax(320px,1fr)); gap:14px}
+  </style>
+  <script id="MathJax-script" async
+ src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <h1>CS280A — Project 3</h1>
+
+  <nav class="toc">
+    <a class="pill" href="#part1">A.1: Shoot and digitize pictures</a>
+    <a class="pill" href="#part2">A.2: Recover homographies</a>
+    <a class="pill" href="#part3">A.3: Warp the images</a>
+    <a class="pill" href="#part4">A.4: Blend images into a mosaic</a>
+    <a class="pill" href="#part5">A.5: Bells and Whistles</a>
+  </nav>
+
+  <a id="part1"></a>
+  <h2>A.1: Shoot and digitize pictures</h2>
+  <p class="muted">Here I display three sets of photos, two of which are buildings and one of which is a wall.</p>
+  <figure><img src="./building1/building1.png" alt="building1"><figcaption>View from the 6th floor of the Sutardja Dai Hall.</figcaption>
+  </figure>
+  <figure><img src="./building2/building2.png" alt="building2"><figcaption>View from the skybridge between the Sutardja Dai Hall and Cory Hall.</figcaption></figure>
+  <figure><img src="./wall/wall.png" alt="wall"><figcaption>Photo of a wall.</figcaption></figure>
+
+  
+  <a id="part2"></a>
+  <h2>A.2: Building 1</h2>
+  
+  <div class="block">
+    <h3>System equations</h3>
+    <div class="note">From \(\,\mathbf{p}' \sim H\mathbf{p}\,\) to a linear system \(A\mathbf{h}=\mathbf{b}\).</div>
+    
+    \[
+    \mathbf{p}' \sim H\,\mathbf{p},\quad
+    \mathbf{p}=[x,y,1]^T,\ \mathbf{p}'=[x',y',1]^T
+    \]
+    If we can fix \(h_{33}=1\), the equation above becomes
+    \[
+    \begin{aligned}
+    -x\,h_{11} - y\,h_{12} - h_{13} + x\,x'\,h_{31} + y\,x'\,h_{32} &= -x' \\
+    -x\,h_{21} - y\,h_{22} - h_{23} + x\,y'\,h_{31} + y\,y'\,h_{32} &= -y'
+    \end{aligned}
+    \]
+    where we denote \(\mathbf{h}=[h_{11},h_{12},h_{13},h_{21},h_{22},h_{23},h_{31},h_{32}]^T\), then we have \(A\mathbf{h}=\mathbf{b}\).
+    
+  </div>
+
+  <div class="block">
+    <h3>Our numeric system for the building 1 (20 point correspondences in total)</h3>
+    <p>Matrix \(A\) (shape 40×8):</p>
+    <p>$$
+      \begin{bmatrix}-2138.000 & -3400.000 & -1.000 & 0.000 & 0.000 & 0.000 & 6751804.000 & 10737200.000 \\0.000 & 0.000 & 0.000 & -2138.000 & -3400.000 & -1.000 & 7423136.000 & 11804800.000 \\-1914.000 & -4040.000 & -1.000 & 0.000 & 0.000 & 0.000 & 5592708.000 & 11804880.000 \\0.000 & 0.000 & 0.000 & -1914.000 & -4040.000 & -1.000 & 7893336.000 & 16660960.000 \\-2022.000 & -4028.000 & -1.000 & 0.000 & 0.000 & 0.000 & 6134748.000 & 12220952.000 \\0.000 & 0.000 & 0.000 & -2022.000 & -4028.000 & -1.000 & 8330640.000 & 16595360.000 \\-1914.000 & -4268.000 & -1.000 & 0.000 & 0.000 & 0.000 & 5585052.000 & 12454024.000 \\0.000 & 0.000 & 0.000 & -1914.000 & -4268.000 & -1.000 & 8329728.000 & 18574336.000 \\-2014.000 & -4256.000 & -1.000 & 0.000 & 0.000 & 0.000 & 6086308.000 & 12861632.000 \\0.000 & 0.000 & 0.000 & -2014.000 & -4256.000 & -1.000 & 8764928.000 & 18522112.000 \\-1902.000 & -4548.000 & -1.000 & 0.000 & 0.000 & 0.000 & 5534820.000 & 13234680.000 \\0.000 & 0.000 & 0.000 & -1902.000 & -4548.000 & -1.000 & 8825280.000 & 21102720.000 \\-2006.000 & -4540.000 & -1.000 & 0.000 & 0.000 & 0.000 & 6054108.000 & 13701720.000 \\0.000 & 0.000 & 0.000 & -2006.000 & -4540.000 & -1.000 & 9315864.000 & 21083760.000 \\-1898.000 & -4768.000 & -1.000 & 0.000 & 0.000 & 0.000 & 5515588.000 & 13855808.000 \\0.000 & 0.000 & 0.000 & -1898.000 & -4768.000 & -1.000 & 9231872.000 & 23191552.000 \\-706.000 & -3816.000 & -1.000 & 0.000 & 0.000 & 0.000 & 1238324.000 & 6693264.000 \\0.000 & 0.000 & 0.000 & -706.000 & -3816.000 & -1.000 & 2682800.000 & 14500800.000 \\-1230.000 & -3784.000 & -1.000 & 0.000 & 0.000 & 0.000 & 2747820.000 & 8453456.000 \\0.000 & 0.000 & 0.000 & -1230.000 & -3784.000 & -1.000 & 4674000.000 & 14379200.000 \\-706.000 & -4136.000 & -1.000 & 0.000 & 0.000 & 0.000 & 1238324.000 & 7254544.000 \\0.000 & 0.000 & 0.000 & -706.000 & -4136.000 & -1.000 & 2900248.000 & 16990688.000 \\-1222.000 & -4104.000 & -1.000 & 0.000 & 0.000 & 0.000 & 2725060.000 & 9151920.000 \\0.000 & 0.000 & 0.000 & -1222.000 & -4104.000 & -1.000 & 5034640.000 & 16908480.000 \\-1218.000 & -4328.000 & -1.000 & 0.000 & 0.000 & 0.000 & 2711268.000 & 9634128.000 \\0.000 & 0.000 & 0.000 & -1218.000 & -4328.000 & -1.000 & 5290992.000 & 18800832.000 \\-698.000 & -4692.000 & -1.000 & 0.000 & 0.000 & 0.000 & 1213124.000 & 8154696.000 \\0.000 & 0.000 & 0.000 & -698.000 & -4692.000 & -1.000 & 3241512.000 & 21789648.000 \\-1210.000 & -4632.000 & -1.000 & 0.000 & 0.000 & 0.000 & 2678940.000 & 10255248.000 \\0.000 & 0.000 & 0.000 & -1210.000 & -4632.000 & -1.000 & 5624080.000 & 21529536.000 \\-686.000 & -4928.000 & -1.000 & 0.000 & 0.000 & 0.000 & 1186780.000 & 8525440.000 \\0.000 & 0.000 & 0.000 & -686.000 & -4928.000 & -1.000 & 3342192.000 & 24009216.000 \\-1206.000 & -4860.000 & -1.000 & 0.000 & 0.000 & 0.000 & 2670084.000 & 10760040.000 \\0.000 & 0.000 & 0.000 & -1206.000 & -4860.000 & -1.000 & 5870808.000 & 23658480.000 \\-690.000 & -5252.000 & -1.000 & 0.000 & 0.000 & 0.000 & 1193700.000 & 9085960.000 \\0.000 & 0.000 & 0.000 & -690.000 & -5252.000 & -1.000 & 3576960.000 & 27226368.000 \\-1194.000 & -5172.000 & -1.000 & 0.000 & 0.000 & 0.000 & 2624412.000 & 11368056.000 \\0.000 & 0.000 & 0.000 & -1194.000 & -5172.000 & -1.000 & 6175368.000 & 26749584.000 \\-758.000 & -3280.000 & -1.000 & 0.000 & 0.000 & 0.000 & 1365916.000 & 5910560.000 \\0.000 & 0.000 & 0.000 & -758.000 & -3280.000 & -1.000 & 2492304.000 & 10784640.000\end{bmatrix}
+    $$</p>
+    <p>Vector \(\mathbf{b}\) (shape 40×1):</p>
+    <p>$$
+      \begin{bmatrix}-3158.000 \\-3472.000 \\-2922.000 \\-4124.000 \\-3034.000 \\-4120.000 \\-2918.000 \\-4352.000 \\-3022.000 \\-4352.000 \\-2910.000 \\-4640.000 \\-3018.000 \\-4644.000 \\-2906.000 \\-4864.000 \\-1754.000 \\-3800.000 \\-2234.000 \\-3800.000 \\-1754.000 \\-4108.000 \\-2230.000 \\-4120.000 \\-2226.000 \\-4344.000 \\-1738.000 \\-4644.000 \\-2214.000 \\-4648.000 \\-1730.000 \\-4872.000 \\-2214.000 \\-4868.000 \\-1730.000 \\-5184.000 \\-2198.000 \\-5172.000 \\-1802.000 \\-3288.000\end{bmatrix}
+    $$</p>
+  </div>
+
+  <div class="block">
+    <h3>Recovered homography \(H\)</h3>
+    <p>We report \(H\) normalized so that \(H_{33}=1\):</p>
+    <p>$$
+      \begin{bmatrix}0.775 & -0.008 & 1157.522 \\-0.132 & 0.911 & 249.095 \\-0.000 & -0.000 & 1.000\end{bmatrix}
+    $$</p>
+  </div>
+  <figure><img src="./building1/building1_point_correspondence.png" alt="building1_point_correspondence"><figcaption>Point correspondences of the building 1.</figcaption>
+  
+
+  <h2>A.2: Building 2</h2>
+  <div class="block">
+    <h3>Our numeric system for the building 2 (10 point correspondences in total)</h3>
+    <p>Matrix \(A\) (shape 20×8):</p>
+    <p>$$
+      \begin{bmatrix}-5510.000 & -1380.000 & -1.000 & 0.000 & 0.000 & 0.000 & 17422620.000 & 4363560.000 \\0.000 & 0.000 & 0.000 & -5510.000 & -1380.000 & -1.000 & 8838040.000 & 2213520.000 \\-5030.000 & -2228.000 & -1.000 & 0.000 & 0.000 & 0.000 & 14134300.000 & 6260680.000 \\0.000 & 0.000 & 0.000 & -5030.000 & -2228.000 & -1.000 & 11528760.000 & 5106576.000 \\-5034.000 & -2304.000 & -1.000 & 0.000 & 0.000 & 0.000 & 14145540.000 & 6474240.000 \\0.000 & 0.000 & 0.000 & -5034.000 & -2304.000 & -1.000 & 11900376.000 & 5446656.000 \\-4906.000 & -3420.000 & -1.000 & 0.000 & 0.000 & 0.000 & 13118644.000 & 9145080.000 \\0.000 & 0.000 & 0.000 & -4906.000 & -3420.000 & -1.000 & 16464536.000 & 11477520.000 \\-4994.000 & -3436.000 & -1.000 & 0.000 & 0.000 & 0.000 & 13693548.000 & 9421512.000 \\0.000 & 0.000 & 0.000 & -4994.000 & -3436.000 & -1.000 & 16779840.000 & 11544960.000 \\-5038.000 & -3472.000 & -1.000 & 0.000 & 0.000 & 0.000 & 13975412.000 & 9631328.000 \\0.000 & 0.000 & 0.000 & -5038.000 & -3472.000 & -1.000 & 17048592.000 & 11749248.000 \\-5334.000 & -4116.000 & -1.000 & 0.000 & 0.000 & 0.000 & 15905988.000 & 12273912.000 \\0.000 & 0.000 & 0.000 & -5334.000 & -4116.000 & -1.000 & 20887944.000 & 16118256.000 \\-5342.000 & -4208.000 & -1.000 & 0.000 & 0.000 & 0.000 & 15972580.000 & 12581920.000 \\0.000 & 0.000 & 0.000 & -5342.000 & -4208.000 & -1.000 & 21368000.000 & 16832000.000 \\-2662.000 & -3148.000 & -1.000 & 0.000 & 0.000 & 0.000 & 750684.000 & 887736.000 \\0.000 & 0.000 & 0.000 & -2662.000 & -3148.000 & -1.000 & 8901728.000 & 10526912.000 \\-2650.000 & -3552.000 & -1.000 & 0.000 & 0.000 & 0.000 & 662500.000 & 888000.000 \\0.000 & 0.000 & 0.000 & -2650.000 & -3552.000 & -1.000 & 10133600.000 & 13582848.000\end{bmatrix}
+    $$</p>
+    <p>Vector \(\mathbf{b}\) (shape 20×1):</p>
+    <p>$$
+      \begin{bmatrix}-3162.000 \\-1604.000 \\-2810.000 \\-2292.000 \\-2810.000 \\-2364.000 \\-2674.000 \\-3356.000 \\-2742.000 \\-3360.000 \\-2774.000 \\-3384.000 \\-2982.000 \\-3916.000 \\-2990.000 \\-4000.000 \\-282.000 \\-3344.000 \\-250.000 \\-3824.000\end{bmatrix}
+    $$</p>
+  </div>
+
+  <div class="block">
+    <h3>Recovered homography \(H\)</h3>
+    <p>We report \(H\) normalized so that \(H_{33}=1\):</p>
+    <p>$$
+      \begin{bmatrix}2.274 & -0.116 & -5236.892 \\0.566 & 1.791 & -1975.948 \\0.000 & -0.000 & 1.000\end{bmatrix}
+    $$</p>
+  </div>
+  </figure>
+  <figure><img src="./building2/building2_point_correspondence.png" alt="building2_point_correspondence"><figcaption>Point correspondences of the building 2.</figcaption></figure>
+  
+
+
+
+  <h2>A.2: The wall</h2>
+  <div class="block">
+    <h3>Our numeric system for the wall (15 point correspondences in total)</h3>
+    <p>Matrix \(A\) (shape 30×8):</p>
+    <p>$$
+      \begin{bmatrix}-4206.000 & -2080.000 & -1.000 & 0.000 & 0.000 & 0.000 & 8841012.000 & 4372160.000 \\0.000 & 0.000 & 0.000 & -4206.000 & -2080.000 & -1.000 & 8125992.000 & 4018560.000 \\-3686.000 & -2104.000 & -1.000 & 0.000 & 0.000 & 0.000 & 6155620.000 & 3513680.000 \\0.000 & 0.000 & 0.000 & -3686.000 & -2104.000 & -1.000 & 7106608.000 & 4056512.000 \\-4154.000 & -3460.000 & -1.000 & 0.000 & 0.000 & 0.000 & 8698476.000 & 7245240.000 \\0.000 & 0.000 & 0.000 & -4154.000 & -3460.000 & -1.000 & 13110024.000 & 10919760.000 \\-3650.000 & -3404.000 & -1.000 & 0.000 & 0.000 & 0.000 & 6139300.000 & 5725528.000 \\0.000 & 0.000 & 0.000 & -3650.000 & -3404.000 & -1.000 & 11475600.000 & 10702176.000 \\-2554.000 & -2188.000 & -1.000 & 0.000 & 0.000 & 0.000 & 1353620.000 & 1159640.000 \\0.000 & 0.000 & 0.000 & -2554.000 & -2188.000 & -1.000 & 4934328.000 & 4227216.000 \\-2522.000 & -3288.000 & -1.000 & 0.000 & 0.000 & 0.000 & 1387100.000 & 1808400.000 \\0.000 & 0.000 & 0.000 & -2522.000 & -3288.000 & -1.000 & 7888816.000 & 10284864.000 \\-3442.000 & -4316.000 & -1.000 & 0.000 & 0.000 & 0.000 & 5238724.000 & 6568952.000 \\0.000 & 0.000 & 0.000 & -3442.000 & -4316.000 & -1.000 & 13823072.000 & 17333056.000 \\-3366.000 & -4400.000 & -1.000 & 0.000 & 0.000 & 0.000 & 4880700.000 & 6380000.000 \\0.000 & 0.000 & 0.000 & -3366.000 & -4400.000 & -1.000 & 13840992.000 & 18092800.000 \\-3706.000 & -4368.000 & -1.000 & 0.000 & 0.000 & 0.000 & 6470676.000 & 7626528.000 \\0.000 & 0.000 & 0.000 & -3706.000 & -4368.000 & -1.000 & 14898120.000 & 17559360.000 \\-3634.000 & -4464.000 & -1.000 & 0.000 & 0.000 & 0.000 & 6141460.000 & 7544160.000 \\0.000 & 0.000 & 0.000 & -3634.000 & -4464.000 & -1.000 & 14972080.000 & 18391680.000 \\-3990.000 & -4436.000 & -1.000 & 0.000 & 0.000 & 0.000 & 7908180.000 & 8792152.000 \\0.000 & 0.000 & 0.000 & -3990.000 & -4436.000 & -1.000 & 16087680.000 & 17885952.000 \\-3942.000 & -4540.000 & -1.000 & 0.000 & 0.000 & 0.000 & 7655364.000 & 8816680.000 \\0.000 & 0.000 & 0.000 & -3942.000 & -4540.000 & -1.000 & 16288344.000 & 18759280.000 \\-3194.000 & -4600.000 & -1.000 & 0.000 & 0.000 & 0.000 & 4094708.000 & 5897200.000 \\0.000 & 0.000 & 0.000 & -3194.000 & -4600.000 & -1.000 & 13849184.000 & 19945600.000 \\-3434.000 & -5576.000 & -1.000 & 0.000 & 0.000 & 0.000 & 5254020.000 & 8531280.000 \\0.000 & 0.000 & 0.000 & -3434.000 & -5576.000 & -1.000 & 17801856.000 & 28905984.000 \\-2418.000 & -4160.000 & -1.000 & 0.000 & 0.000 & 0.000 & 1126788.000 & 1938560.000 \\0.000 & 0.000 & 0.000 & -2418.000 & -4160.000 & -1.000 & 9826752.000 & 16906240.000\end{bmatrix}
+    $$</p>
+    <p>Vector \(\mathbf{b}\) (shape 30×1):</p>
+    <p>$$
+      \begin{bmatrix}-2102.000 \\-1932.000 \\-1670.000 \\-1928.000 \\-2094.000 \\-3156.000 \\-1682.000 \\-3144.000 \\-530.000 \\-1932.000 \\-550.000 \\-3128.000 \\-1522.000 \\-4016.000 \\-1450.000 \\-4112.000 \\-1746.000 \\-4020.000 \\-1690.000 \\-4120.000 \\-1982.000 \\-4032.000 \\-1942.000 \\-4132.000 \\-1282.000 \\-4336.000 \\-1530.000 \\-5184.000 \\-466.000 \\-4064.000\end{bmatrix}
+    $$</p>
+  </div>
+
+  <div class="block">
+    <h3>Recovered homography \(H\)</h3>
+    <p>We report \(H\) normalized so that \(H_{33}=1\):</p>
+    <p>$$
+      \begin{bmatrix}1.916 & 0.074 & -4217.728 \\0.502 & 1.735 & -2050.372 \\0.000 & 0.000 & 1.000\end{bmatrix}
+    $$</p>
+  </div>
+
+  <figure><img src="./wall/wall_point_correspondence.png" alt="wall_point_correspondence"><figcaption>Point correspondences of a wall.</figcaption></figure>
+
+
+  
+
+  <a id="part3"></a>
+  <h2>A.3: Warp the images</h2>
+
+  <p class="note">
+      We rectify images via <strong>inverse warping</strong> using the same homography.
+      The geometric mapping is identical; differences are purely in the <em>resampling</em> method.
+    </p>
+
+    <figure><img src="./rectification/box_rectified.png" alt="box_rectified"><figcaption>The rectified results of a rectangular box using both neareast neighbors and bilinear method.</figcaption></figure>
+
+    <figure><img src="./rectification/flyer_rectified.png" alt="flyer_rectified"><figcaption>The rectified results of a rectangular flyer using both neareast neighbors and bilinear method.</figcaption></figure>
+
+    <div class="grid">
+      <section class="card">
+        <h3>Nearest Neighbor <span class="tag">fastest</span></h3>
+        <ul>
+          <li><strong>Look:</strong> crisp but <em>jaggy</em>. Slanted edges (e.g., desk/partition seam and poster edges) show clear
+              <strong>stair-stepping</strong> and aliasing. Fine textures can appear noisy or “sparkly”.</li>
+          <li><strong>Pros:</strong> very fast; preserves discrete labels (useful for masks/segmentations).</li>
+          <li><strong>Cons:</strong> visible artifacts on diagonals/thin lines; can produce moiré on repetitive patterns.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h3>Bilinear <span class="tag">better quality</span></h3>
+        <ul>
+          <li><strong>Look:</strong> visually <strong>smoother</strong>. The same slanted edges become continuous with much less stair-stepping;
+              repetitive textures exhibit far less aliasing. Small text/high-frequency detail is
+              <em>slightly softened</em> (minor blur).</li>
+          <li><strong>Pros:</strong> reduces aliasing and edge artifacts; usually preferred for perceptual quality and for blending in mosaics.</li>
+          <li><strong>Cons:</strong> mild blur; a bit slower than NN (still cheap in practice).</li>
+        </ul>
+      </section>
+    </div>
+
+    <section class="card">
+      <h3>Conclusions</h3>
+      <ul class="conclusions">
+        <li>For <strong>rectification</strong> deliverables, <em>bilinear</em> yields cleaner edges and fewer artifacts; NN is great for quick debugging.</li>
+        <li>For <strong>mosaics</strong>, bilinear generally produces better seams and fewer high-frequency artifacts, especially when combined with feathering or pyramid blending.</li>
+        <li>Both methods avoid holes thanks to <strong>inverse warping</strong>; geometry is identical—the difference is only photometric (resampling).</li>
+      </ul>
+    </section>
+
+
+  <a id="part4"></a>
+  <h2>A.4: Blend images into a mosaic</h2>
+
+  <p class="muted">
+    We form a mosaic by warping one image into the coordinate system of the other and
+    combining them with <em>soft alpha feathering</em> (weighted averaging). The geometry comes
+    from the homography; the visual smoothness comes from our weights.
+  </p>
+
+  <div class="card">
+    <h3>Inputs &amp; Outputs</h3>
+    <ul>
+      <li><strong>Inputs</strong>:
+        <code>im1</code> (to be warped), <code>im2</code> (reference),
+        <code>H_1to2</code> (homography mapping <code>im1 → im2</code>),
+        a warper <code>warp_func</code> (either <code>warpImageNearestNeighbor</code> or <code>warpImageBilinear</code>),
+        and blending parameters <code>feather</code>, <code>falloff</code>, <code>gamma</code>, <code>bg</code>.
+      </li>
+      <li><strong>Output</strong>: the blended mosaic image.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Procedure (what <code>blend_pair</code> does)</h3>
+    <ol>
+      <li><strong>Warp im1 into im2’s frame</strong> (inverse warping).  
+        We call <code>warp_func(im1, H_1to2, fill_value=bg)</code> which returns:
+        the warped image <code>w1</code>, a binary alpha <code>a1</code> (0 outside, 255 where samples are valid),
+        and the integer <code>offset</code> of the warped patch within the mosaic canvas.</li>
+
+      <li><strong>Compute the mosaic canvas bounds</strong>.  
+        We take the union of the reference image extent and the warped patch
+        (using the returned offset and size) to get the mosaic width <code>W</code> and height <code>H</code>.</li>
+
+      <li><strong>Initialize accumulators</strong>.  
+        Two arrays of shape <code>(H, W, 3)</code>:
+        <ul>
+          <li><code>canvas_sum</code>: accumulates <code>pixel * weight</code></li>
+          <li><code>canvas_wsum</code>: accumulates <code>weight</code></li>
+        </ul>
+        These let us do a stable weighted average at the end.</li>
+
+      <li><strong>Build soft alpha weights (feathering)</strong>.  
+        For each image we create a smooth weight map:
+        <ul>
+          <li>Start with a binary mask (all 255 for <code>im2</code>; the returned <code>a1</code> for <code>w1</code>).</li>
+          <li>Run a separable <strong>box blur</strong> with odd kernel size <code>ksize = falloff</code>.
+              We implement the blur with an <em>integral-image style</em> 1-D pass that preserves the original array size.</li>
+          <li>Normalize to [0,1], zero outside original support, and optionally apply <code>gamma</code> to sharpen or widen the ramp.</li>
+        </ul>
+        The helper is <code>_soft_alpha(alpha_uint8, ksize, gamma)</code>.
+      </li>
+
+      <li><strong>Accumulate both layers</strong>.  
+        Paste <code>im2</code> (unwarped) at its natural location and <code>w1</code> at its offset:
+        <pre>canvas_sum  += patch * weight
+canvas_wsum += weight</pre>
+        We use <code>_accumulate(...)</code> to handle offsets, channels, and broadcasting.</li>
+
+      <li><strong>Normalize to get the mosaic</strong>.  
+        <code>mosaic = canvas_sum / max(canvas_wsum, ε)</code> with a small <code>ε</code> to avoid division by zero.
+      </li>
+    </ol>
+  </div>
+
+
+  <figure><img src="building1_mosaic.png" alt="building1_mosaic"><figcaption>Building 1 mosaic.</figcaption></figure>
+
+  <figure><img src="building2_mosaic.png" alt="building2_mosaic"><figcaption>Building 2 mosaic.</figcaption></figure>
+
+  <figure><img src="wall_mosaic.png" alt="wall_mosaic"><figcaption>The wall mosaic.</figcaption></figure>
+
+  <a id="part5"></a>
+  <h2>A.5: Bells and Whistles</h2>
+
+  <div class="card">
+    <p>
+      Instead of projecting each image onto a plane, we project it onto the surface of a cylinder and
+      then “unroll” the cylinder to a flat image. With focal length \(f\) (in pixels) and principal point \((c_x,c_y)\),
+      the horizontal coordinate is reparameterized by an angle, which reduces perspective distortion for wide fields of view:
+    </p>
+    <p>
+      \[
+        x' = f\,\arctan\!\Big(\frac{x-c_x}{f}\Big), \qquad
+        y' = f\,\frac{(y-c_y)}{\sqrt{(x-c_x)^2+f^2}} + c_y.
+      \]
+    </p>
+  </div>
+
+  <div class="card">
+    <ul>
+      <li><strong>Vertical lines remain (nearly) straight.</strong> A vertical facade or column maps to a constant \(x'\) (the cylinder is aligned with the vertical axis), so vertical edges mostly stay straight.</li>
+      <li><strong>Horizontal lines become curves.</strong> Lines such as the roofline or floor grout run across changing viewing directions; after \(x'=\!f\arctan(\cdot)\), they appear as gentle arcs. Only the horizontal line passing exactly through the optical axis stays nearly straight.</li>
+      <li><strong>Black wedges at the top/bottom.</strong> These are regions with no valid samples after unrolling the cylinder; they can be cropped in the final mosaic.</li>
+    </ul>
+  </div>
+
+  
+  <figure><img src="cylindrical_wall.png" alt="cylindrical_wall"><figcaption>The cylindrical mapping of the wall.</figcaption></figure>
+
+
+
+
+</body>
+</html>
