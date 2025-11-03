@@ -40,6 +40,11 @@
     <a class="pill" href="#part3">A.3: Warp the images</a>
     <a class="pill" href="#part4">A.4: Blend images into a mosaic</a>
     <a class="pill" href="#part5">A.5: Bells and Whistles</a>
+    <a class="pill" href="#part6">B.1: Harris Corner Detection</a>
+    <a class="pill" href="#part7">B.2: Feature Descriptor Extraction</a>
+    <a class="pill" href="#part8">B.3: Feature matching</a>
+    <a class="pill" href="#part9">B.4: RANSAC for Robust Homography</a>
+    <a class="pill" href="#part10">B.5: Bells and Whistles (Rotation Invariance)</a>
   </nav>
 
   <a id="part1"></a>
@@ -281,17 +286,122 @@ canvas_wsum += weight</pre>
     </p>
   </div>
 
-  <div class="card">
-    <ul>
-      <li><strong>Vertical lines remain (nearly) straight.</strong> A vertical facade or column maps to a constant \(x'\) (the cylinder is aligned with the vertical axis), so vertical edges mostly stay straight.</li>
-      <li><strong>Horizontal lines become curves.</strong> Lines such as the roofline or floor grout run across changing viewing directions; after \(x'=\!f\arctan(\cdot)\), they appear as gentle arcs. Only the horizontal line passing exactly through the optical axis stays nearly straight.</li>
-      <li><strong>Black wedges at the top/bottom.</strong> These are regions with no valid samples after unrolling the cylinder; they can be cropped in the final mosaic.</li>
-    </ul>
-  </div>
-
   
   <figure><img src="cylindrical_wall.png" alt="cylindrical_wall"><figcaption>The cylindrical mapping of the wall.</figcaption></figure>
 
+  <a id="part6"></a>
+  <h2>B.1: Harris Corner Detection</h2>
+
+  <div class="card">
+    <p>
+      See the figures below. If we directly use the Harris interest point detector, there will be large amount of points. Using ANMS will make the interest point more robust.
+    </p>
+  </div>
+
+  
+  <figure><img src="building1/harris_anms.png" alt="building1_harris_anms"><figcaption>The comparison of direct harris algorithm and anms algorithm (100 points) for the building 1.</figcaption></figure>
+  <figure><img src="building2/harris_anms.png" alt="building2_harris_anms"><figcaption>The comparison of direct harris algorithm and anms algorithm (100 points) for the building 2.</figcaption></figure>
+  <figure><img src="wall/harris_anms.png" alt="wall_harris_anms"><figcaption>The comparison of direct harris algorithm and anms algorithm (100 points) for the wall.</figcaption></figure>
+
+
+
+  <a id="part7"></a>
+  <h2>B.2: Feature Descriptor Extraction</h2>
+
+  <div class="card">
+    <p>
+      For each place, we select 10 representative feature descriptors.
+    </p>
+  </div>
+
+  
+  <figure><img src="building1/desc_extractor.png" alt="building1_desc_extractor"><figcaption>Representative feature descriptors of the building 1.</figcaption></figure>
+  <figure><img src="building2/desc_extractor.png" alt="building2_desc_extractor"><figcaption>Representative feature descriptors of the building 2.</figcaption></figure>
+  <figure><img src="wall/desc_extractor.png" alt="wall_desc_extractor"><figcaption>Representative feature descriptors of the wall.</figcaption></figure>
+
+
+  <a id="part8"></a>
+  <h2>B.3: Feature Matching</h2>
+
+  <div class="card">
+    <p>
+      For each place, we choose 0.8 as the ratio threshold.
+    </p>
+  </div>
+
+  
+  <figure><img src="building1/feature_matching.png" alt="building1_feature_matching"><figcaption>Feature matching of the building 1.</figcaption></figure>
+  <figure><img src="building2/feature_matching.png" alt="building2_feature_matching"><figcaption>Feature matching of the building 2.</figcaption></figure>
+  <figure><img src="wall/feature_matching.png" alt="wall_feature_matching"><figcaption>Feature matching of the wall.</figcaption></figure>
+
+  <a id="part9"></a>
+  <h2>B.4: RANSAC for Robust Homography</h2>
+
+  <div class="grid">
+    <figure><img src="building1/building1_auto.png" alt="building1_auto"><figcaption>Auto stitching using RANSAC of the building 1.</figcaption></figure>
+
+    <figure><img src="building2/building2_auto.png" alt="building2_auto"><figcaption>Auto stitching using RANSAC of the building 2.</figcaption></figure>
+
+    <figure><img src="wall/wall_auto.png" alt="wall_auto"><figcaption>Auto stitching using RANSAC of the wall.</figcaption></figure>
+  </div>
+
+  <div class="grid">
+    <figure><img src="building1/building1_manual.png" alt="building1_manual"><figcaption>Manually stitching using RANSAC of the building 1.</figcaption></figure>
+
+    <figure><img src="building2/building2_manual.png" alt="building2_manual"><figcaption>Manually stitching using RANSAC of the building 2.</figcaption></figure>
+
+    <figure><img src="wall/wall_manual.png" alt="wall_manual"><figcaption>Manually stitching using RANSAC of the wall.</figcaption></figure>
+  </div>
+  
+
+  <a id="part10"></a>
+  <h2>B.5: Rotation invariance</h2>
+
+  <div class="card">
+    <p>
+      For the building 1, the feature descriptors with rotation invariance is shown below.
+    </p>
+  </div>
+
+  <div class="grid">
+    <figure><img src="building1/rot_invariance1.png" alt="building1_rot1"><figcaption></figcaption></figure>
+    <figure><img src="building1/rot_invariance3.png" alt="building1_rot2"><figcaption></figcaption></figure>
+  </div>
+  <figure><img src="building1/rot_invariance2.png" alt="building1_rot3"><figcaption></figcaption></figure>
+  <figure><img src="building1/rot_invariance4.png" alt="building1_rot4"><figcaption></figcaption></figure>
+
+  <figure><img src="building1/building1_rot_auto.png" alt="building1_rot_auto"><figcaption>Auto stitching with rotation invariance descriptors of the building 1.</figcaption></figure>
+
+
+  <div class="card">
+    <p>
+      For the building 2, the feature descriptors with rotation invariance is shown below.
+    </p>
+  </div>
+
+  <div class="grid">
+    <figure><img src="building2/rot_invariance1.png" alt="building2_rot1"><figcaption></figcaption></figure>
+    <figure><img src="building2/rot_invariance3.png" alt="building2_rot2"><figcaption></figcaption></figure>
+  </div>
+  <figure><img src="building2/rot_invariance2.png" alt="building2_rot3"><figcaption></figcaption></figure>
+  <figure><img src="building2/rot_invariance4.png" alt="building2_rot4"><figcaption></figcaption></figure>
+
+  <figure><img src="building2/building2_rot_auto.png" alt="building2_rot_auto"><figcaption>Auto stitching with rotation invariance descriptors of the building 2.</figcaption></figure>
+
+  <div class="card">
+    <p>
+      For the wall, the feature descriptors with rotation invariance is shown below.
+    </p>
+  </div>
+
+  <div class="grid">
+    <figure><img src="wall/rot_invariance1.png" alt="wall_rot1"><figcaption></figcaption></figure>
+    <figure><img src="wall/rot_invariance3.png" alt="wall_rot2"><figcaption></figcaption></figure>
+  </div>
+  <figure><img src="wall/rot_invariance2.png" alt="wall_rot3"><figcaption></figcaption></figure>
+  <figure><img src="wall/rot_invariance4.png" alt="wall_rot4"><figcaption></figcaption></figure>
+
+  <figure><img src="wall/wall_rot_auto.png" alt="wall_rot_auto"><figcaption>Auto stitching with rotation invariance descriptors of the wall.</figcaption></figure>
 
 
 
