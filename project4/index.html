@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CS280A — Project 4: Neural Radiance Field</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{ --ink:#0f1a2b; --muted:#5a6b7c; --card:#f7f9fb; --line:#e4ecf3; --accent:#0ea5e9; }
+    *{box-sizing:border-box}
+    body{font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, sans-serif; margin: 20px; line-height: 1.6; color: var(--ink)}
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    h1,h2,h3{margin: 0 0 10px}
+    .muted{color:var(--muted)}
+    .toc{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0}
+    .pill{display:inline-block; padding:6px 10px; background:#eef6ff; color:#084b74; border:1px solid #cfe7ff; border-radius:999px; font-size:13px}
+    section.card{background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin: 16px 0}
+    ol{margin: 8px 0 0 22px}
+    .grid{display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px; align-items:start}
+    figure{margin:0; background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px; height:100%}
+    figure img{display:block; width:100%; height:auto; border-radius:6px}
+    figcaption{font-weight: bold;
+      margin-top: 8px;}
+    table{width:100%; border-collapse: collapse; margin-top:8px; font-size:15px}
+    th, td{border:1px solid var(--line); padding:8px 10px; text-align:center}
+    th{background:#eef6ff}
+    .hr{height:1px; background:var(--line); margin:24px 0}
+    .note{font-size:14px; color:var(--muted)}
+    code.inline{background:#f3f6fa; border:1px solid var(--line); padding:1px 5px; border-radius:6px}
+    .two{display:grid; grid-template-columns: repeat(auto-fit, minmax(320px,1fr)); gap:14px}
+    .fig-img {
+      width: 60%;
+      max-width: 600px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    figcaption {
+        text-align: center;
+        font-family: "Arial", sans-serif;
+        /* 换成 Times New Roman： */
+        /* font-family: "Times New Roman", serif; */
+    }
+
+    .figure-group {
+      text-align: center;
+      margin: 1em 0;
+    }
+
+    .subfigures {
+      display: flex;
+      justify-content: center;
+      gap: 20px;              /* 两图间距 */
+      flex-wrap: wrap;        /* 小屏自动换行 */
+    }
+
+    .subfigure {
+      width: 45%;             /* 每张图比例，可调 */
+    }
+
+    .subfigure img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .subcaption {
+      font-size: 0.9em;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    .main-caption {
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    /*body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 960px;
+      margin: 40px auto;
+      line-height: 1.6;
+      color: #222;
+      padding: 0 16px;
+    }*/
+    h1, h2, h3 {
+      color: #222;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 0.6em;
+    }
+    h2 {
+      margin-top: 1.4em;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 0.2em;
+    }
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      background: #f5f5f5;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 0.95em;
+    }
+    ul {
+      padding-left: 1.4em;
+    }
+    .kv-table {
+      border-collapse: collapse;
+      margin-top: 0.6em;
+      font-size: 0.95em;
+    }
+    .kv-table th, .kv-table td {
+      border: 1px solid #ccc;
+      padding: 4px 8px;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #eef3ff;
+      font-size: 0.85em;
+      margin-right: 4px;
+    }
+  </style>
+  <script id="MathJax-script" async
+ src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <h1>CS280A — Project 4</h1>
+
+  <nav class="toc">
+    <a class="pill" href="#0">Part 0: 3D scanning of a doll</a>
+    <a class="pill" href="#1">Part 1: Fit a Neural Field to a 2D Image</a>
+    <a class="pill" href="#2">Part 2: Fit a Neural Radiance Field from Multi-view Images</a>
+    <a class="pill" href="#2.7">Bells & Whistles: Render the depths map video</a>
+  </nav>
+
+  <a id="0"></a>
+  <h2>Part 0: Calibrating the Camera and Capturing a 3D Scan</h2>
+  In Figure 1, I take a 3D scan of a doll, which will be used later for building a NeRF.
+
+
+  <figure class="figure-group" id="3d_scanning">
+
+    <div class="subfigures">
+
+      <div class="subfigure">
+        <img src="render1_copy.png" alt="render1">
+        <div class="subcaption">(a) screenshot 1.</div>
+      </div>
+
+      <div class="subfigure">
+        <img src="render2_copy.png" alt="render2">
+        <div class="subcaption">(b) screenshot 2.</div>
+      </div>
+
+    </div>
+
+    <figcaption class="main-caption">
+      Figure 1. Example screenshots of the iphone camera frustums visualization in Viser.
+    </figcaption>
+
+  </figure>
+
+  <a id="1"></a>
+  <h2>Part 1: Fit a Neural Field to a 2D Image</h2>
+  In this part, I will create a MLP network with <i>Sinusoidal Positional Encoding</i> (PE), which can make the neural network learn the high frequencies more easily. The architecture of the neural network is shown in Figure 2. The number of layers is 10 (excluding the Linear (3) for r, g, b channels); the width is 256; the learning rate is <strong><i>0.5e-2</i></strong>.
+
+  <figure class="figure-group" id="3d_scanning">
+
+    <div class="subfigures">
+
+      <div class="subfigure">
+        <img src="net_arch_2D.png" alt="net_arch_2D">
+      </div>
+
+    </div>
+
+    <figcaption class="main-caption">
+      Figure 2. The network architecture of a 2D neural field.
+    </figcaption>
+
+  </figure>
+
+  <h3>Training results of the provided test image</h3>
+  <figure>
+    <img src="training_2d_1.png" alt="training_2d_1" style="width: 100%;">
+    <figcaption>Figure 3. The training progress of the provided test image.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="loss_PSNR1.png" alt="loss_PSNR1" style="width: 50%; margin:0; display:block; margin:0 auto;">
+    <figcaption>Figure 4. The loss and PSNR of the provided test image.</figcaption>
+  </figure>
+  
+  <h3>Training results of an "egg" toy</h3>
+  <figure>
+    <img src="training_2d_2.png" alt="training_2d_2" style="width: 100%;">
+    <figcaption>Figure 5. The training progress of an "egg" toy.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="loss_PSNR2.png" alt="loss_PSNR2" style="width: 50%; margin:0; display:block; margin:0 auto;">
+    <figcaption>Figure 6. The loss and PSNR of an "egg" toy.</figcaption>
+  </figure>
+
+  <h3>Hyperparameter tuning</h3>
+
+  In this sub-part, I tried different L and width. The training progress is shown in Figure 7. We can notice that: 
+  <ul>
+    <li>If the L is extremely small, we will lose most of the high frequency information. Even though the width is very large, we still cannot get a good PSNR.</li>
+    <li>If the width is extremely small, the image cannot be recovered well even though the frequency information is rich. The reason is that the neural network is not expressive enough so that the PSNR is still low.</li>
+  </ul>
+
+  The summery of the results is shown in Table 1.
+
+  <style>
+  table {
+      border-collapse: collapse;
+      width: 40%;
+      margin: 20px auto;
+      font-size: 12px;
+      text-align: center;
+    }
+    th, td {
+      border: 2px solid #000;
+      padding: 10px 15px;
+    }
+    th {
+      background-color: #f7f7f7;
+      font-weight: bold;
+    }
+    caption {
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+  </style>
+
+  <table>
+    <caption>Table 1. Performance Comparison with L = 2, 16 and Width = 32, 256.</caption>
+    <tr>
+      <th>PSNR value</th>
+      <th>L = 2</th>
+      <th>L = 16</th>
+    </tr>
+    <tr>
+      <td>Width = 32</td>
+      <td>21.40 </td>
+      <td>24.85</td>
+    </tr>
+    <tr>
+      <td>Width = 256</td>
+      <td>23.78</td>
+      <td>28.97</td>
+    </tr>
+  </table>
+
+
+  <figure>
+    <img src="hyperparam_L_dim.png" alt="hyperparam_L_dim" style="width: 100%;">
+    <figcaption>Figure 7. The training progress of the hyperparameter tuning.</figcaption>
+  </figure>
+
+  The corresponding PSNR during the training progress is shown in Figure 8.
+  <figure>
+    <img src="hyperparam_L_dim_PSNR.png" alt="hyperparam_L_dim_loss_PSNR2" style="width: 50%; margin:0; display:block; margin:0 auto;">
+    <figcaption>Figure 8. The loss and PSNR of the hyperparameter tuning.</figcaption>
+  </figure>
+
+  <a id="2"></a>
+  <h2>Part 2: Fit a Neural Radiance Field from Multi-view Images</h2>
+
+  <h3>NeRF Training Pipeline Summary</h3>
+
+  <h4>1. Data Loading</h4>
+  <p>
+    The code loads training, validation and test data from
+    <code>toy2_camera_poses_undist.npz</code> using NumPy.
+  </p>
+  <ul>
+    <li><code>images_train</code>: training images, normalized to <code>[0, 1]</code>.</li>
+    <li><code>c2ws_train</code>: camera-to-world matrices for training views.</li>
+    <li><code>images_val</code>: validation images (not heavily used in this script).</li>
+    <li><code>c2ws_val</code>: camera-to-world matrices for validation views.</li>
+    <li><code>c2ws_test</code>: camera-to-world matrices for novel test views.</li>
+    <li><code>focal</code>: camera focal length (float).</li>
+  </ul>
+  <p>
+    A calibrated intrinsic matrix <code>K</code> is constructed as:
+  </p>
+  <pre><code>K = [[focal,   0, W/2],
+     [   0, focal, H/2],
+     [   0,     0,   1]]</code></pre>
+
+  <h4>2. Coordinate Transforms & Rays</h4>
+
+  <h4>2.1 Camera to World Transform</h4>
+  <p>
+    The helper function <code>transform(c2w, x_c)</code> transforms 3D points
+    from camera space to world space using:
+  </p>
+  <pre><code>X_w = R @ x_c + t</code></pre>
+  <p>
+    where <code>R</code> is the rotation (3×3) and <code>t</code> is the translation (3D).
+  </p>
+
+  <h4>2.2 Pixel to Camera Coordinates</h4>
+  <p>
+    <code>pixel_to_camera(K, uv, s)</code> converts pixel coordinates
+    <code>(u, v)</code> into camera coordinates using the pinhole model:
+  </p>
+  <pre><code>x = (u - cx) / fx * s
+y = (v - cy) / fy * s
+z = s</code></pre>
+
+  <h4>2.3 Pixel to Ray in World Space</h4>
+  <p>
+    <code>pixel_to_ray(K, c2w, uv)</code> builds camera-space points with
+    <code>pixel_to_camera</code>, transforms them into world coordinates, and
+    constructs rays:
+  </p>
+  <ul>
+    <li><code>ray_o</code>: ray origin = camera center in world space.</li>
+    <li><code>ray_d</code>: normalized direction = <code>X_w - ray_o</code>.</li>
+  </ul>
+
+  <h4>2.4 Random Ray Sampling</h4>
+  <p>
+    <code>sample_random_rays(images_train, c2ws_train, K, num_rays)</code>:
+  </p>
+  <ul>
+    <li>Randomly selects image indices and pixel coordinates.</li>
+    <li>Fetches corresponding ground-truth RGB values.</li>
+    <li>Computes ray origins and directions in world space.</li>
+    <li>Returns <code>(ray_o, ray_d, rgb)</code> for training.</li>
+  </ul>
+
+  <h4>3. Sampling Points Along Rays</h4>
+
+  <h4>3.1 Stratified Sampling</h4>
+  <p>
+    <code>sample_points_on_rays_torch(ray_o, ray_d, near, far, n_samples)</code>:
+  </p>
+  <ul>
+    <li>Uniformly partitions the interval <code>[near, far]</code> into bins.</li>
+    <li>For each bin, samples a random depth inside that bin (stratified sampling).</li>
+    <li>Computes 3D points: <code>pts = ray_o + t * ray_d</code>.</li>
+  </ul>
+
+  <h4>3.2 Importance Sampling (Coarse to Fine)</h4>
+  <p>
+    <code>sample_pdf</code> and <code>sample_points_importance</code> implement
+    NeRF-style hierarchical sampling:
+  </p>
+  <ul>
+    <li>Builds a PDF over midpoints of coarse samples using their weights.</li>
+    <li>Samples additional fine depth values according to this PDF.</li>
+    <li>Merges coarse and fine samples and sorts them along the ray.</li>
+  </ul>
+
+  <h4>4. Ray Dataset Wrapper</h4>
+  <p>
+    The <code>RaysData</code> class precomputes all rays for all training images:
+  </p>
+  <ul>
+    <li>For each image, builds a full grid of pixel coordinates.</li>
+    <li>Converts pixels to camera coordinates, then to world coordinates.</li>
+    <li>Computes <code>rays_o</code>, <code>rays_d</code> and stores them along with RGB colors.</li>
+    <li><code>sample_rays(B)</code> returns <code>B</code> random rays and corresponding colors.</li>
+  </ul>
+
+  <h4>5. Positional Encoding & NeRF Network</h4>
+
+  <h4>5.1 Positional Encoding</h4>
+  <p>
+    <code>PosEncoding3D(L)</code> encodes a 3D vector
+    <code>x = (x, y, z)</code> using sinusoidal features:
+  </p>
+  <ul>
+    <li>Frequencies: <code>freqs = 2^k · π</code>, for <code>k ∈ [0, L-1]</code>.</li>
+    <li>For each component, computes <code>sin(freq · x)</code> and <code>cos(freq · x)</code>.</li>
+    <li>Output dimension: <code>3 · (1 + 2L)</code> (original 3D + sine + cosine).</li>
+  </ul>
+  <p>
+    The network uses:
+  </p>
+  <ul>
+    <li><code>Lx = 10</code> for 3D positions.</li>
+    <li><code>Ld = 4</code> for viewing directions.</li>
+  </ul>
+
+  <h4>5.2 NeRF Architecture</h4>
+  <p>
+    The <code>NeRF</code> class is a simplified NeRF MLP consisting of:
+  </p>
+  <ul>
+    <li>Two sequential MLP blocks for position features with a skip connection:
+      <ul>
+        <li><code>pts_linears1</code>: 4 fully connected layers on position PE.</li>
+        <li>Skip connection concatenating input PE.</li>
+        <li><code>pts_linears2</code>: 4 more layers.</li>
+      </ul>
+    </li>
+    <li><code>sigma_linear</code>: outputs volume density <code>σ ≥ 0</code> per point.</li>
+    <li><code>feature_linear</code>: produces a feature vector for color branch.</li>
+    <li>Color branch:
+      <ul>
+        <li>Concatenates features with direction PE.</li>
+        <li>Two layers (<code>color_linear1</code>, <code>color_linear2</code>).</li>
+        <li><code>rgb_linear</code> with <code>sigmoid</code> activation gives RGB in <code>[0, 1]</code>.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h4>6. Volume Rendering</h4>
+
+  <h4>6.1 Simple Volume Renderer</h4>
+  <p>
+    <code>volrend(sigmas, rgbs, step_size)</code> assumes uniform spacing:
+  </p>
+  <ul>
+    <li><code>σΔ = σ · step_size</code>.</li>
+    <li>Alpha: <code>α = 1 − exp(−σΔ)</code>.</li>
+    <li>Transmittance: cumulative product of <code>exp(−σΔ)</code>.</li>
+    <li>Weights: <code>w_i = T_i · α_i</code>.</li>
+    <li>Final color: weighted sum of RGB samples.</li>
+  </ul>
+
+  <h4>6.2 Depth-Dependent Volume Renderer</h4>
+  <p>
+    <code>volrend2(sigmas, rgbs, t_vals)</code> uses non-uniform spacing:
+  </p>
+  <ul>
+    <li>Computes <code>Δt_i = t_{i+1} − t_i</code> per ray.</li>
+    <li>Uses a large final <code>Δt</code> for the last sample to approximate infinity.</li>
+    <li>Same alpha / transmittance / weights formulation as above.</li>
+    <li>Returns both rendered colors and per-sample weights (for importance sampling).</li>
+  </ul>
+
+  <h4>7. Rendering a Full Image</h4>
+  <p>
+    <code>render_image(nerf, K, c2w, H, W, …)</code> renders an entire image from
+    a single camera pose:
+  </p>
+  <ul>
+    <li>Generates a grid of pixel centers over width <code>W</code> and height <code>H</code>.</li>
+    <li>Converts pixels to camera coordinates and then to world-space rays.</li>
+    <li>Processes rays in chunks (default 8192) for memory efficiency.</li>
+    <li>Samples 3D points along each ray, queries NeRF and applies volume rendering.</li>
+    <li>Reshapes the result to <code>(H, W, 3)</code> and returns a CPU tensor.</li>
+  </ul>
+
+  <h4>8. Training Loop</h4>
+  <p>
+    The training configuration is roughly:</p>
+
+  <table class="kv-table">
+    <tr><th>Hyperparameter</th><th>Value</th></tr>
+    <tr><td>Rays per batch (<code>n_rays</code>)</td><td>1024</td></tr>
+    <tr><td>Samples per ray (<code>n_samples</code>)</td><td>100</td></tr>
+    <tr><td>Near / Far</td><td>2 / 6 (LEGO), 0.02 / 0.5 (own images)</td></tr>
+    <tr><td>Optimizer</td><td>Adam</td></tr>
+    <tr><td>Learning rate</td><td>5e-4</td></tr>
+    <tr><td>Iterations</td><td>8000</td></tr>
+  </table>
+
+  <p>The main training steps per iteration:</p>
+  <ul>
+    <li>Sample random rays and target RGBs with <code>sample_random_rays</code>.</li>
+    <li>Sample 3D points along each ray in <code>[near, far]</code>.</li>
+    <li>Flatten points and directions and query the NeRF network.</li>
+    <li>Apply volume rendering to get predicted RGB for each ray.</li>
+    <li>Compute loss using mean squared error:
+      <code>loss = MSE(rgb_render, rgb_gt)</code>.</li>
+    <li>Backpropagate and update weights with Adam.</li>
+  </ul>
+  <p>
+    Every 100 iterations, the script:
+  </p>
+  <ul>
+    <li>Prints current loss and PSNR.</li>
+    <li>Renders a full image from a fixed train camera and saves it as a PNG snapshot.</li>
+  </ul>
+
+  <h4>9. Novel View Rendering & Video Export</h4>
+  <p>
+    After training, the network is evaluated on test camera poses
+    <code>c2ws_test</code>:
+  </p>
+  <ul>
+    <li>For each test pose, <code>render_image</code> is called to render a frame.</li>
+    <li>Frames are saved as PNGs in <code>lego_test_frames/</code>.</li>
+    <li>OpenCV’s <code>VideoWriter</code> combines all frames into an MP4 video
+      (<code>lego_nerf_test.mp4</code>) with a target FPS of 30.</li>
+  </ul>
+
+  <h4>10. Overall Pipeline</h4>
+  <p>
+    In summary, this code implements a standard NeRF pipeline:
+  </p>
+  <ol>
+    <li>Load posed images and camera parameters.</li>
+    <li>Sample rays and points in 3D space.</li>
+    <li>Encode positions and view directions with sinusoidal positional encoding.</li>
+    <li>Predict density and color using an MLP-based NeRF network.</li>
+    <li>Integrate along each ray using volume rendering to obtain RGB colors.</li>
+    <li>Train the network with MSE loss on sampled rays.</li>
+    <li>Render novel views and assemble them into a camera trajectory video.</li>
+  </ol>
+
+  
+  <h3>Neural Radiance Field of LEGO</h3>
+  The visualization of rays and samples with camera of the LEGO being reconstructed is shown in Figure 9.
+
+  <figure class="figure-group" id="samples_rays">
+
+    <div class="subfigures">
+
+      <div class="subfigure">
+        <img src="render_lego_rays_samples.png" alt="lego_rays_samples1">
+        <div class="subcaption">(a) screenshot 1.</div>
+      </div>
+
+      <div class="subfigure">
+        <img src="render_lego_rays_samples2.png" alt="lego_rays_samples2">
+        <div class="subcaption">(b) screenshot 2.</div>
+      </div>
+
+    </div>
+
+    <figcaption class="main-caption">
+      Figure 9. Visualization of rays and samples with cameras: LEGO.
+    </figcaption>
+
+  </figure>
+
+  The visualization of the training progress is shown in Figure 10. The PSNR curve is shown in Figure 11.
+  <figure>
+    <img src="lego_training_visualization.png" alt="lego_training_visualization" style="width: 100%; margin:0; display:block; margin:0 auto;">
+    <figcaption>Figure 10. The visualization of the training progress of LEGO.</figcaption>
+  </figure>
+
+
+  <figure>
+    <img src="training_val_log.png" alt="training_val_log" style="width: 60%; margin:0; display:block; margin:0 auto;">
+    <figcaption>Figure 11. The PSNR of the training and validation progress.</figcaption>
+  </figure>
+
+
+  The spherical rendering of the lego video is shown below.
+  <figure>
+    <img src="lego_test_video.gif" alt="lego_test_video" style="width: 20%; margin:0; display:block; margin:0 auto;">
+    <figcaption>Figure 12. The spherical rendering of the lego video.</figcaption>
+  </figure>
+
+
+
+
+
+<h3>Neural Radiance Field of own images</h3>
+
+<h4>Hyperparameter changes</h4>
+  <ol>
+    <li>Different maximum frequency (L=10, 12): PSNR increases 1.</li>
+    <li>Different learning rates (lr=2e-4, 5e-4, 1e-3): do not change much after training enough time.</li>
+    <li>Different "near", "far" values for rendering: it affects a lot. if not being carefully chosen, the model cannot work.</li>
+  </ol>
+
+
+
+  The visualization of rays and samples with camera of a doll being reconstructed is shown in Figure 13.
+
+  <figure class="figure-group" id="samples_rays">
+
+    <div class="subfigures">
+
+      <div class="subfigure">
+        <img src="render_toy2_rays_samples.png" alt="rays_samples1">
+        <div class="subcaption">(a) screenshot 1.</div>
+      </div>
+
+      <div class="subfigure">
+        <img src="render_toy2_rays_samples2.png" alt="rays_samples2">
+        <div class="subcaption">(b) screenshot 2.</div>
+      </div>
+
+    </div>
+
+    <figcaption class="main-caption">
+      Figure 13. Visualization of rays and samples with cameras: own images.
+    </figcaption>
+
+  </figure>
+
+  The visualization of the training progress is shown in Figure 14. The training progress and PSNR curve are shown in Figure 15.
+  <figure>
+    <img src="toy_training_visualization.png" alt="toy_training_visualization" style="width: 100%; margin:0; display:block; margin:0 auto;">
+    <figcaption>Figure 14. The visualization of the training progress of LEGO.</figcaption>
+  </figure>
+
+
+  <figure>
+    <img src="loss_PSNR_toy2.png" alt="training_val_log_toy" style="width: 60%; margin:0; display:block; margin:0 auto;">
+    <figcaption>Figure 15. The PSNR of the training and validation progress.</figcaption>
+  </figure>
+
+
+  The spherical rendering of the lego video is shown below.
+  <figure>
+    <img src="toy2_test_video.gif" alt="lego_test_video" style="width: 20%; margin:0; display:block; margin:0 auto;">
+    <figcaption>Figure 16. The spherical rendering of the lego video.</figcaption>
+  </figure>
+
+  <a id="2.7"></a>
+  <h2>Bells & Whistles: Render the depths map video</h2>
+  The expected depth follows the equation:
+  $$
+  t = \sum_{i} T_i \alpha_i t_i = \sum_{i} w_i t_i
+  $$
+
+  The generated depth map video of the LEGO is shown in Figure 17.
+
+  <figure>
+    <img src="test_lego_depth.gif" alt="lego_test_video" style="width: 20%; margin:0; display:block; margin:0 auto;">
+    <figcaption>Figure 17. The spherical rendering of the lego depth map video.</figcaption>
+  </figure>
+
+
+
+</body>
+</html>
