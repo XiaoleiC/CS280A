@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CS280A — Project 5: The Power of Diffusion Models!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --ink:#0f172a;
+      --muted:#6b7280;
+      --card:#f9fafb;
+      --line:#e5e7eb;
+      --accent:#0ea5e9;
+      --accent-soft:#e0f2fe;
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    html{
+      background: #fcfbfd;
+    }
+
+    body{
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      max-width: 980px;
+      margin: 40px auto;
+      line-height: 1.7;
+      color: var(--ink);
+      padding: 32px 28px 40px;
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow:
+        0 30px 80px rgba(15, 23, 42, 0.4),
+        0 0 0 1px rgba(148, 163, 184, 0.2);
+    }
+
+    a{
+      color:var(--accent);
+      text-decoration:none;
+      transition: color .18s ease, box-shadow .18s ease, background-color .18s ease;
+    }
+
+    a:hover{
+      text-decoration:underline;
+    }
+
+    h1,h2,h3,h4{
+      margin: 0 0 10px;
+      color:#0f172a;
+      letter-spacing: 0.02em;
+    }
+
+    h1{
+      font-size: clamp(1.9rem, 2.4vw + 1rem, 2.4rem);
+      text-align:center;
+      margin-bottom: 18px;
+    }
+
+    h2{
+      font-size: 1.35rem;
+      margin-top: 1.8rem;
+      padding-top: .35rem;
+      border-top: 2px solid rgba(148,163,184,.35);
+    }
+
+    h3{
+      font-size: 1.1rem;
+      margin-top: 1.4rem;
+    }
+
+    h4{
+      font-size: 1.02rem;
+      margin-top: 1.1rem;
+    }
+
+    .muted{
+      color:var(--muted);
+    }
+
+    /* Top navigation pills */
+    .toc{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:10px 0 22px;
+      justify-content:center;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:7px 14px;
+      background:#eff6ff;
+      color:#0f172a;
+      border:1px solid #bfdbfe;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:500;
+      box-shadow: 0 6px 12px rgba(148,163,184,.35);
+      transition:transform .16s ease, box-shadow .16s ease, background-color .18s ease;
+      white-space:nowrap;
+    }
+
+    .pill::before{
+      content:"●";
+      font-size:9px;
+      color:#3b82f6;
+    }
+
+    .pill:hover{
+      text-decoration:none;
+      background:#dbeafe;
+      transform: translateY(-1px);
+      box-shadow:0 10px 22px rgba(148,163,184,.45);
+    }
+
+    /* Sections & cards */
+    section.card{
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin: 18px 0;
+    }
+
+    ol{
+      margin: 8px 0 0 22px;
+    }
+
+    ul{
+      padding-left: 1.4em;
+      margin-top: .2em;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap:14px;
+      align-items:start;
+    }
+
+    /* Figures & images */
+    figure{
+      margin:18px auto;
+      background:#f9fafb;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 12px 10px;
+      max-width: 100%;
+      box-shadow:0 18px 35px rgba(15,23,42,.18);
+    }
+
+    figure img{
+      display:block;
+      width:100%;
+      height:auto;
+      border-radius:10px;
+    }
+
+    figcaption{
+      margin-top: 8px;
+      font-size: 0.9rem;
+      text-align:center;
+      color:#4b5563;
+    }
+
+    figcaption b{
+      color:#111827;
+    }
+
+    .fig-img {
+      width: 60%;
+      max-width: 600px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .figure-group {
+      text-align: center;
+      margin: 1em 0;
+    }
+
+    .subfigures {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .subfigure {
+      width: 45%;
+      max-width: 420px;
+    }
+
+    .subfigure img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .subcaption {
+      font-size: 0.86em;
+      font-style: italic;
+      margin-top: 4px;
+      color:#6b7280;
+    }
+
+    .main-caption {
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    /* Equations */
+    .equation {
+      background: #f9fafb;
+      border-left: 3px solid #0ea5e9;
+      padding: 6px 10px;
+      margin: 8px 0;
+      text-align: center;
+      font-family: "Times New Roman", serif;
+      font-size: 0.96rem;
+      border-radius: 8px;
+    }
+
+    /* Code styles */
+    code.inline{
+      background:#f3f4f6;
+      border:1px solid #e5e7eb;
+      padding:1px 5px;
+      border-radius:6px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.9em;
+    }
+
+    code{
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      background:#f3f4f6;
+      padding:2px 4px;
+      border-radius:4px;
+      font-size: 0.92em;
+    }
+
+    .code-block {
+      background: #0b1120;
+      color:#e5e7eb;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-family: Consolas, monospace;
+      white-space: pre;
+      overflow-x:auto;
+      font-size: 0.9em;
+      box-shadow: inset 0 0 0 1px rgba(15,23,42,.7);
+    }
+
+    /* Tables */
+    table{
+      width:100%;
+      border-collapse: collapse;
+      margin-top:8px;
+      font-size:15px;
+      background:#f9fafb;
+      border-radius: 10px;
+      overflow:hidden;
+    }
+
+    th, td{
+      border:1px solid var(--line);
+      padding:8px 10px;
+      text-align:center;
+    }
+
+    th{
+      background:#eff6ff;
+      font-weight:600;
+    }
+
+    .kv-table {
+      border-collapse: collapse;
+      margin-top: 0.6em;
+      font-size: 0.95em;
+      width:auto;
+      background:#f9fafb;
+      border-radius: 8px;
+      overflow:hidden;
+    }
+
+    .kv-table th, .kv-table td {
+      border: 1px solid #d1d5db;
+      padding: 4px 8px;
+    }
+
+    /* Layout helpers */
+    .hr{
+      height:1px;
+      background:var(--line);
+      margin:24px 0;
+    }
+
+    .note{
+      font-size:14px;
+      color:var(--muted);
+    }
+
+    .two{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px,1fr));
+      gap:14px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #eef3ff;
+      font-size: 0.82em;
+      margin-right: 4px;
+      color:#1e293b;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 640px){
+      body{
+        margin: 18px auto;
+        padding: 18px 14px 26px;
+        border-radius: 14px;
+      }
+
+      figure{
+        padding:8px;
+      }
+
+      .pill{
+        padding:6px 12px;
+        font-size:12px;
+      }
+
+      h1{
+        font-size: 1.6rem;
+      }
+    }
+  </style>
+  <script id="MathJax-script" async
+ src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <h1>CS280A — Project 5: The Power of Diffusion Models!</h1>
+
+  <nav class="toc">
+    <a class="pill" href="#0">Part A.0: Setup</a>
+    <a class="pill" href="#1">Part A.1: Sampling Loops</a>
+    <a class="pill" href="#2">Part A.2: Bells & Whistles</a>
+  </nav>
+
+  <a id="0"></a>
+  <h2>Part A.0: Setup</h2>
+  <p>In this demo, we will use the <a href="https://huggingface.co/docs/diffusers/api/pipelines/deepfloyd_if">DeepFloyd IF</a> diffusion model, which is a two stage model trained by Stability AI. The first stage produces images of size \(64 \times 64\) and the second stage can make the \(64 \times 64\) be larger, \(256 \times 256\). The recent version also has a third stage, which can make higher resolution. DeepFloyd was trained as a text-to-image model, which takes text prompts as input and outputs images that are aligned with the text. We choose T5 as the text encoder to generate embeddings for the prompt. Throughout this demo, the random seed is always \(666\) for everything, i.e., <span style="border: 1px solid #ccc; padding: 2px 4px; border-radius: 4px; background-color: #f7f7f7;">torch.cuda.manual_seed(666)</span>, <span style="border: 1px solid #ccc; padding: 2px 4px; border-radius: 4px; background-color: #f7f7f7;">torch.manual_seed(666)</span>, and <span style="border: 1px solid #ccc; padding: 2px 4px; border-radius: 4px; background-color: #f7f7f7;">random.seed(666)</span>. The framework is shown in Figure 1.</p>
+
+  <figure style="text-align: center;">
+    <img src="plots/deepfloyd_net.png" alt="deepfloyd" style="width: 60%; display: block; margin: 0 auto;">
+    <figcaption>Figure 1. Network architecture of DeepFloyd (credit to <a href="https://stability.ai/news/deepfloyd-if-text-to-image-model">Stability AI</a>).</figcaption>
+  </figure>
+
+  
+
+  <p>Let's try different text prompts (each embedding has shape \([1, 77, 4096]\), i.e., \([\text{batch}, \text{max_seq_len}, \text{embed_dim}]\)), embeddings of which are generated by T5 encoder. The generated with different inference steps are shown in Figure 2 and Figure 3, respectively.</p>
+
+
+  <figure style="text-align: center;">
+    <img src="plots/play_model_steps20.png" alt="playaround1" style="width: 80%; display: block; margin: 0 auto;">
+    <figcaption>Figure 2. Generated images with 20 inference steps.</figcaption>
+  </figure>
+
+  <figure style="text-align: center;">
+    <img src="plots/play_model_steps10.png" alt="playaround2" style="width: 80%; display: block; margin: 0 auto;">
+    <figcaption>Figure 3. Generated images with 10 inference steps.</figcaption>
+  </figure>
+
+  <h4>Summaries</h4>
+
+  <ul>
+    <li>The random seed is chosen as \(666\);</li>
+    <li>According to Figure 2 and Figure 3, we can find different inference steps lead to images of different qualities. We notice that more steps can lead to sharper details, more stable structure, better alignment with the prompt, and reduced noise and artifacts.</li>
+    <li>
+      The prompts are:
+      <ul>
+        <li>a Miyazaki-like illustration of a traveling man with a warm smile, gentle color gradients;</li>
+        <li>a Ghibli-style close-up of a playful girl with wind-blown hair, soft ambient light;</li>
+        <li>a Ghibli-style close-up of a curious child with tousled hair, dreamy background.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <a id="1"></a>
+  <h2>Part A.1: Sampling Loops</h2>
+  <p>Starting with a clean image, \(x_0\), we can iteratively add noise to an image, obtaining progressively more and more noisy version of the image, \(x_t\), until we are left with basically pure noise at timestep \(t=T\). For the DeepFloyd models, \(T=1000\). A diffusion model tries to reverse this process by denoising the image. Briefly, a diffusion model tries to predict the noise in the image given a noisy \(x_t\) and the timestep \(t\). The whole process is shown in Figure 4.</p>
+  <figure style="text-align: center;">
+    <img src="plots/DDPM.png" alt="DDPM" style="width: 60%; display: block; margin: 0 auto;">
+    <figcaption>Figure 4. Denoising Diffusion Probabilistic Models (credit to <a href="https://arxiv.org/abs/2006.11239">source paper</a>).</figcaption>
+  </figure>
+
+  <h3>1.1 Implementing the Forward Process</h3>
+  <p>
+    A key part of difussion is the forward process, which takes a clean image and adds noise to it. The forward process is defined by:
+    <div class="equation">
+      \( q(x_t | x_0)
+        = N \left( x_t ; \sqrt{\bar{\alpha}} x_0, \left(1 - \bar{\alpha}_t\right)\mathbf{I} \right)
+      \)
+    </div>
+    which is equivalent to computing
+    <div class="equation">
+      \(
+        x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \epsilon
+      \), where \(\epsilon \sim N\left(0,1\right)\)
+    </div>
+  </p>
+
+  <p>
+    The forward process is demonstrated in Figure 5.
+  </p>
+
+  <figure style="text-align: center%;">
+    <img src="plots/campanile_different_noise_level.png" alt="campanile_different_noise" style="width: 70%; display: block; margin: 0 auto;">
+    <figcaption>Figure 5. The forward process of the campanile with different noise levels.</figcaption>
+  </figure>
+
+  <h3>1.2 Classical Denoising</h3>
+
+  <p>
+    As a comparison with the diffusion, we first try to denoise these noisy images using classical methods, e.g., Gaussian blur filtering. We use <span style="border: 1px solid #ccc; padding: 2px 2px; border-radius: 0px; background-color: #f7f7f7;">torchvision.transforms.functional.gaussian_blur</span> to denoise images. The Gaussian-denoised version is shown in Figure 6.
+  </p>
+
+  <figure style="text-align: center;">
+    <img src="plots/campanile_gaussian_denoise.png" alt="campanile_gaussian_blur" style="width: 70%; display: block; margin: 0 auto;">
+    <figcaption>Figure 6. Denoising noisy images using Gaussian blur.</figcaption>
+  </figure>
+
+  <h3>1.3 Implementing One Step Denoising</h3>
+  <p>
+    From Figure 6, we know the classical denoising methods cannot work well. Thus, we will use a pretrained diffusion model to denoise. The denoiser that we use is <span style="border: 1px solid #ccc; padding: 2px 2px; border-radius: 0px; background-color: #f7f7f7;">stage_1.unet</span>, which is a UNet that has already been trained on a <i>very, very</i> large dataset of \(\left(x_0, x_t\right)\) pairs of images. We can use it to recover Gaussian noise from the image. Then, we can remove this noise to recover (something close to) the original image. The one-step denoising effect can be found in Figure 7. We can notice that the pretrained diffusion model performs much better than the Gaussian blur filters. When the noise level is low, the diffusion model can nearly completely recover the image. When the noise level is high, the diffusion model can still recover the general feature of the image, but in which the higher frequency information is mostly lost. 
+  </p>
+
+  <figure style="text-align: center;">
+    <img src="plots/campanile_one_step_denoising.png" alt="campanile_gaussian_blur" style="width: 70%; display: block; margin: 0 auto;">
+    <figcaption>Figure 7. One-step denoising noisy images using the pretrained diffusion model.</figcaption>
+  </figure>
+
+  <h3>1.4 Implementing Iterative Denoising</h3>
+  <p>
+    Iterative denoising means that we do not denoise the image using only one step. Instead, we iteratively recover the noisy image to the less noisy one, and finally we recover the original image. To actually do this, we have the following formula:
+    <div class="equation">
+      \(
+        x_{t^\prime} = \frac{\sqrt{\bar{\alpha}_{t^\prime}}\beta_t}{1 - \bar{\alpha}_t} x_0 + \frac{\sqrt{\alpha_{t}}\left(1-\bar{\alpha}_{t^\prime}\right)}{1 - \bar{\alpha}_{t}} x_t + \mathcal{v}_{\sigma}
+        \)
+    </div>
+    where:
+    <ul>
+        <li>
+            \(x_t\) is the image at timestep \(t\);
+        </li>
+        <li>
+            \(x_{t^\prime}\) is the noisy image at timestep \(t^\prime\) where \(t^\prime < t\) (less noisy);
+        </li>
+        <li>
+            \(\bar{\alpha}_t\) is defined by <span style="border: 1px solid #ccc; padding: 2px 2px; border-radius: 0px; background-color: #f7f7f7;">alphas_cumprod</span>, which is stored in <span style="border: 1px solid #ccc; padding: 2px 2px; border-radius: 0px; background-color: #f7f7f7;">stage_1.unet</span>.
+        </li>
+        <li>
+            \(\alpha_t = \bar{\alpha}_t / \bar{\alpha}_{t^\prime}\)
+        </li>
+        <li>
+            \(\beta_t = 1 - \alpha_t\)
+        </li>
+        <li>
+            \(x_0\) is our current estimate of the clean image.
+        </li>
+    </ul>
+  </p>
+
+  <p>
+    We implement the iterative denoising, as shown in Figure 8. Compared with the one-step denoising, we can find that there are more sharper characters. Again, the Gaussian blur cannot recover the image.
+  </p>
+  <figure style="text-align: center;">
+    <img src="plots/campanile_iterative_denoising.png" alt="campanile_gaussian_blur" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 8. Iteratively denoising noisy images using the pretrained diffusion model.</figcaption>
+  </figure>
+
+  <h3>1.5 Diffusion Model Sampling</h3>
+  <p>
+    In this part, we want the diffusion model to denoise an image that is purely random noise. Since the DeepFloyd model is prompt-based, the prompt we use here is "a high quality photo". The generated images are shown in Figure 9. We can still tell the objects from the images, though the quality is not good.
+  </p>
+  
+  <figure style="text-align: center;">
+    <img src="plots/denoising_random_noise.png" alt="campanile_gaussian_blur" style="width: 60%; display: block; margin: 0 auto;">
+    <figcaption>Figure 9. Iteratively denoising a random noise.</figcaption>
+  </figure>
+
+  <h3>1.6 Classifier-Free Guidance</h3>
+  <p>
+    We can notice that the generated images in the prior section are not very good. In order to greatly improve image quality (at the expense of image diversity), we can use a technique called <a href="https://arxiv.org/abs/2207.12598">Classifier-Free Guidance</a> (CFG). In CFG, we compute both a conditional and an unconditonal noise estimate. We denote these \(\epsilon_{c}\) and \(\epsilon_{u}\). Then, we let our new noise estimate be:
+    <div class="equation">
+      \(
+        \epsilon = \epsilon_u + \gamma \left(\epsilon_c - \epsilon_u\right)
+      \)
+    </div>
+    where \(\gamma\) controls the strength of CFG. If \(\gamma = 0\), we get an unconditional noise estimate; if \(\gamma = 1\), we get the conditional noise estimate; if \(\gamma > 1\), we will get much higher quality images (if you are curious about the possible reason, please check out <a href="https://sander.ai/2022/05/26/guidance.html">here</a>).
+  </p>
+  
+  <p>
+    Using the CFG, the denoised images are shown in Figure 10, which are much better.
+  </p>
+  
+  <figure style="text-align: center;">
+    <img src="plots/CFG_denoising_random_noise.png" alt="campanile_gaussian_blur" style="width: 60%; display: block; margin: 0 auto;">
+    <figcaption>Figure 10. CFG-iteratively denoising a random noise.</figcaption>
+  </figure>
+
+  <h3>1.7 Image-to-image Translation</h3>
+  <p>
+    Here, we are going to take some original images, noise them a little, and force them back onto the image manifold without any conditioning. This follows the <a href="https://sde-image-editing.github.io/">SDEdit</a> algorithm. Again, we use "a high quality photo" as the conditonal text prompt.
+  </p>
+  
+  <figure style="text-align: center%;">
+    <img src="plots/campanile_sdedit.png" alt="campanile_gaussian_blur" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 11. SDEdit of campanile.</figcaption>
+  </figure>
+
+  <figure style="text-align: center%;">
+    <img src="plots/rock_sdedit.png" alt="campanile_gaussian_blur" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 12. SDEdit of a reef.</figcaption>
+  </figure>
+
+  <figure style="text-align: center%;">
+    <img src="plots/lake_sdedit.png" alt="campanile_gaussian_blur" style="width: 100%; display: block; margin: 0 auto%;">
+    <figcaption>Figure 13. SDEdit of a grassland.</figcaption>
+  </figure>
+
+  <h4>1.7.1 Editing Hand-Drawn and Web Images</h4>
+  <figure style="text-align: center%;">
+    <img src="plots/conan_sdedit.png" alt="campanile_gaussian_blur" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 14. SDEdit of Detective Conan (from web).</figcaption>
+  </figure>
+
+  <figure style="text-align: center%;">
+    <img src="plots/lafufu_sdedit.png" alt="campanile_gaussian_blur" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 15. SDEdit of a hand-drawn image (Lafufu).</figcaption>
+  </figure>
+
+  <figure style="text-align: center%;">
+    <img src="plots/rainbow_sdedit.png" alt="campanile_gaussian_blur" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 16. SDEdit of a hand-drawn image (rainbow, credit to <a href="https://www.linkedin.com/in/hongqian-iris-li/">Iris</a>).</figcaption>
+  </figure>
+
+  <h4>1.7.2 Inpainting</h4>
+  <p>
+    We can use the same procedure to implement inpainting (following the <a href="https://arxiv.org/abs/2201.09865">RePaint</a> paper). That is, given an image \(x_{\text{orig}}\) and a binary mask \(\mathbf{m}\), we can create a new image that has the same content where \(\mathbf{m}\) is 0, but new content wherever \(\mathbf{m}\) is 1. To do this, we can run the diffusion denoising loop. But at every step, after obtaining \(x_{t}\), we "force" \(x_t\) to have the same pixels as \(x_{\text{orig}}\) where \(\mathbf{m}\) is 0, i.e.,
+    <div class="equation">
+      \(
+        x_t \leftarrow \mathbf{m} x_t + \left(1 - \mathbf{m}\right) \text{forward}\left(x_{\text{orig}}, t\right)
+      \)
+    </div>
+  </p>
+  <p>
+    Essentially, we leave everything inside the edit mask alone, but we replace everything outside the edit mask with our original image -- with the correct amount of noise added for timestep \(t\). We try three different images, as shown below.
+  </p>
+
+  <figure style="text-align: center;">
+    <img src="plots/inpaint_campanile.png" alt="campanile_gaussian_blur" style="width: 60%; display: block; margin: 0 auto;">
+    <figcaption>Figure 17. Inpaint of Campanile.</figcaption>
+  </figure>
+
+  <figure style="text-align: center;">
+    <img src="plots/inpaint_selfie.png" alt="campanile_gaussian_blur" style="width: 60%; display: block; margin: 0 auto;">
+    <figcaption>Figure 18. Inpaint of Ghibli-style selfie 1.</figcaption>
+  </figure>
+
+  <figure style="text-align: center%;">
+    <img src="plots/inpaint_selfie2.png" alt="campanile_gaussian_blur" style="width: 60%; display: block; margin: 0 auto;">
+    <figcaption>Figure 19. Inpaint of Ghibli-style selfie 2.</figcaption>
+  </figure>
+
+  <h4>1.7.3 Text-Conditional Image-to-image Translation</h4>
+  <p>
+    Now, we will do the same thing as SDEdit, but guide the projection with a text prompt. We try three different images, as shown below.
+  </p>
+
+  <figure style="text-align: center%;">
+    <img src="plots/text_condition_campanile.png" alt="campanile_gaussian_blur" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 20. Text-conditional image-to-image translation of Campanile. The prompt text is "a rocket ship launching into the night sky"</figcaption>
+  </figure>
+
+  <figure style="text-align: center%;">
+    <img src="plots/text_condition_selfie.png" alt="campanile_gaussian_blur" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 21. Text-conditional image-to-image translation of selfie 1. The prompt text is "a Ghibli-style close-up of a brave boy looking into the distance, pastel tones, hand-drawn feel"</figcaption>
+  </figure>
+
+  <figure style="text-align: center%;">
+    <img src="plots/text_condition_selfie2.png" alt="campanile_gaussian_blur" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 22. Text-conditional image-to-image translation of selfie 2. The prompt text is "a Ghibli-style close-up of a woman smiling subtly, dreamlike background"</figcaption>
+  </figure>
+
+
+  <h3>1.8 Visual Anagrams</h3>
+  <p>
+    We will implement <a href="https://dangeng.github.io/visual_anagrams/">Visual Anagrams</a> and create optical illusions with diffusion models. In this part, we will create an image that looks differently when flipped upside down.
+  </p>
+  <p>
+    To do this, we will denoise an image \(x_t\) at step \(t\) normally with the prompt \(p_1\), to obtain noise estimate \(\epsilon_1\). But at the same time, we will flip \(x_t\) upside down, and denoise with the prompt \(p_2\), to get noise estimate \(\epsilon_2\). We can flip \(\epsilon_2\) back, and average the two noise estimates. We can then perform a reverse/denoising diffusion step with the averaged noise estimate. The full algorithm will be:
+    <div class="equation">
+      \(
+        \epsilon_1 = \text{CFG of UNet}\left(x_t, t, p_1\right)
+      \)
+    </div>
+    <div class="equation">
+      \(
+        \epsilon_2 = \text{flip}\left(\text{CFG of UNet}\left(\text{flip}\left(x_t\right), t, p_2\right)\right)
+      \)
+    </div>
+    <div class="equation">
+      \(
+        \epsilon = \left(\epsilon_1 + \epsilon_2\right) / 2
+      \)
+    </div>
+    where UNet is the diffusion model UNet from before, \(\text{flip}\left(\cdot\right)\) is a function that flips the image, and \(p_1\) and \(p_2\) are two different text prompt embeddings. And our final noise estimate is \(\epsilon\). Please implement the above algorithm and show example of an illusion.
+  </p>
+
+  <figure style="text-align: center%;">
+    <img src="plots/flip.png" alt="campanile_gaussian_blur" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 23. Visual anagrams: two views shown in the same image when flipped upside down.</figcaption>
+  </figure>
+
+  <h3>1.9 Hybrid Images</h3>
+  <p>
+    We will implement <a href="https://arxiv.org/abs/2404.11615">Factorized Diffusion</a> and create hybrid images. In order to create hybrid images with a diffusion model we can use a similar technique as above. We will create a composite noise estimate \(\epsilon\), by estimating the noise with two different text prompts, and then combining low frequencies from one noise estimate with high frequencies of the other. The algorithm is:
+    <div class="equation">
+      \(
+        \epsilon_1 = \text{CFG of UNet}\left(x_t, t, p_1\right)
+      \)
+    </div>
+    <div class="equation">
+      \(
+        \epsilon_1 = \text{CFG of UNet}\left(x_t, t, p_2\right)
+      \)
+    </div>
+    <div class="equation">
+      \(
+        \epsilon = f_{\text{lowpass}}\left(\epsilon_1\right) + f_{\text{highpass}}\left(\epsilon_2\right)
+      \)
+    </div>
+  </p>
+
+  <figure style="text-align: center%;">
+    <img src="plots/hybrid.png" alt="campanile_gaussian_blur" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 24. Hybrid images: two views when seen from different scales.</figcaption>
+  </figure>
+
+  <a id="2"></a>
+  <h2>Part A.2: Bells & Whistles</h2>
+  <h3>More visual anagrams!</h3>
+  <p>
+    We will implement another two visual anagrams, \(90^\circ\) rotations and color inversions.
+  </p>
+  
+  <p>
+    For \(90^\circ\) rotations, the algorithm follows:
+    <div class="equation">
+      \(
+        \epsilon_1 = \text{CFG of UNet}\left(x_t, t, p_1\right)
+      \)
+    </div>
+    <div class="equation">
+      \(
+        \epsilon_2 = \text{rot-90}\left(\text{CFG of UNet}\left(\text{rot90}\left(x_t\right), t, p_2\right)\right)
+      \)
+    </div>
+    <div class="equation">
+      \(
+        \epsilon = \left(\epsilon_1 + \epsilon_2\right) / 2
+      \)
+    </div>
+  </p>
+  <figure style="text-align: center%;">
+    <img src="plots/rot90.png" alt="campanile_gaussian_blur" style="width: 40%; display: block; margin: 0 auto;">
+    <figcaption>Figure 25. Rot \(90^\circ\): two views when rotated by \(90^\circ\).</figcaption>
+  </figure>
+
+  <p>
+    For color inversions, the algorithm follows:
+    <div class="equation">
+      \(
+        \epsilon_1 = \text{CFG of UNet}\left(x_t, t, p_1\right)
+      \)
+    </div>
+    <div class="equation">
+      \(
+        \epsilon_2 = -\left(\text{CFG of UNet}\left(-x_t, t, p_2\right)\right)
+      \)
+    </div>
+    <div class="equation">
+      \(
+        \epsilon = \left(\epsilon_1 + \epsilon_2\right) / 2
+      \)
+    </div>
+  </p>
+  <figure style="text-align: center%;">
+    <img src="plots/color_inversion.png" alt="campanile_gaussian_blur" style="width: 40%; display: block; margin: 0 auto;">
+    <figcaption>Figure 26. Color inversions: two views when the color is inversed.</figcaption>
+  </figure>
+  <h3>Design a course logo!</h3>
+  We use two prompt texts, "an oil painting of UC Berkeley logo" and "an oil painting of the course logo of computer vision" to iteratively denoise a "Cal" logo. The course logo will show letters of "Cal" and "CV" at the same time.
+
+  <figure style="text-align: center%;">
+    <img src="plots/cal_cv_logo.png" alt="campanile_gaussian_blur" style="width: 20%; display: block; margin: 0 auto;">
+    <figcaption>Figure 27. Design the course logo by iteratively CFG denoising the image with two prompt text, "an oil painting of UC Berkeley logo" and "an oil painting of the course logo of computer vision".</figcaption>
+  </figure>
+
+</body>
+</html>
