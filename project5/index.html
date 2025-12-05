@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>CS280A — Project 5: The Power of Diffusion Models!</title>
+  <title>CS280A — Project 5: Diffusion Models and Flow Matching</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root{
@@ -245,81 +245,167 @@
     }
 
     .code-block {
-      background: #0b1120;
-      color:#e5e7eb;
-      padding: 10px 12px;
-      border-radius: 8px;
+      background: #f9fafb;
+      color: #1e293b;
+      padding: 12px 14px;
+      border-radius: 10px;
       font-family: Consolas, monospace;
       white-space: pre;
-      overflow-x:auto;
-      font-size: 0.9em;
-      box-shadow: inset 0 0 0 1px rgba(15,23,42,.7);
+      overflow-x: auto;
+      font-size: 0.8em;
+      border: 1px solid var(--line);
+      box-shadow: 0 6px 14px rgba(15,23,42,0.08);
     }
 
-    /* Tables */
-    table{
-      width:100%;
-      border-collapse: collapse;
-      margin-top:8px;
-      font-size:15px;
-      background:#f9fafb;
-      border-radius: 10px;
-      overflow:hidden;
-    }
+        /* Tables - prettier, with subtle stripes and hover */
+    .table-wrap{
+        margin: 12px 0 20px;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 14px 30px rgba(15,23,42,0.14);
+        border: 1px solid rgba(148,163,184,0.65);
+        background: radial-gradient(circle at top left,#eff6ff,#f9fafb 45%,#f3f4f6);
+      }
 
-    th, td{
-      border:1px solid var(--line);
-      padding:8px 10px;
-      text-align:center;
-    }
+      table caption {
+        caption-side: top;
+        padding: 10px 14px 6px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--ink);
+        text-align: left;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
 
-    th{
-      background:#eff6ff;
-      font-weight:600;
-    }
+      table{
+        width:100%;
+        border-collapse: collapse;
+        margin:0;
+        font-size:0.92rem;
+        background:transparent;
+      }
 
-    .kv-table {
-      border-collapse: collapse;
-      margin-top: 0.6em;
-      font-size: 0.95em;
-      width:auto;
-      background:#f9fafb;
-      border-radius: 8px;
-      overflow:hidden;
-    }
+      th, td{
+        border:1px solid rgba(209,213,219,0.8);
+        padding:8px 12px;
+        text-align:left;
+      }
 
-    .kv-table th, .kv-table td {
-      border: 1px solid #d1d5db;
-      padding: 4px 8px;
-    }
+      th{
+        background: linear-gradient(to right,#eff6ff,#e0f2fe);
+        font-weight:600;
+        font-size:0.78rem;
+        text-transform: uppercase;
+        letter-spacing:0.08em;
+        color:#0f172a;
+      }
 
-    /* Layout helpers */
-    .hr{
-      height:1px;
-      background:var(--line);
-      margin:24px 0;
-    }
+      td{
+        background: rgba(249,250,251,0.96);
+      }
 
-    .note{
-      font-size:14px;
-      color:var(--muted);
-    }
+      tr:nth-child(even) td{
+        background:#f3f4f6;
+      }
 
-    .two{
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px,1fr));
-      gap:14px;
-    }
+      tr:hover td{
+        background: var(--accent-soft);
+        transition: background-color .18s ease;
+      }
 
-    .tag {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: #eef3ff;
-      font-size: 0.82em;
-      margin-right: 4px;
-      color:#1e293b;
-    }
+      .kv-table {
+        border-collapse: collapse;
+        margin-top: 0.6em;
+        font-size: 0.9rem;
+        width:auto;
+        background:#f9fafb;
+        border-radius: 10px;
+        overflow:hidden;
+        box-shadow: 0 8px 18px rgba(15,23,42,0.12);
+      }
+
+      .kv-table th, .kv-table td {
+        border: 1px solid #d1d5db;
+        padding: 6px 10px;
+      }
+
+      .kv-table th{
+        background:#e5edff;
+        font-weight:600;
+        text-transform:uppercase;
+        letter-spacing:0.06em;
+        font-size:0.75rem;
+      }
+
+      /* Algorithm Card - same look, tighter lines */
+      .algorithm-card {
+        background: radial-gradient(circle at top left,#eff6ff,#f9fafb 55%,#e5e7eb);
+        border: 1px solid rgba(148,163,184,0.7);
+        border-radius: 16px;
+        padding: 10px 12px 8px;   /* 比之前稍微收紧一点 */
+        margin: 16px 0;
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+      }
+
+      .algorithm-title {
+        display:flex;
+        align-items:center;
+        gap:6px;
+        font-weight: 650;
+        font-size: 0.9rem;
+        margin-bottom: 4px;       /* 原来如果是 6~8，可以缩小一点 */
+        border-bottom: 1px dashed rgba(148,163,184,0.7);
+        padding-bottom: 4px;
+        color: var(--ink);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .algorithm-title::before{
+        content:"⏵";
+        font-size: 0.85rem;
+        color: var(--accent);
+      }
+
+      .algorithm-content {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.78rem;       /* 稍微小一丢丢 */
+        line-height: 0.6;        /* 关键：降低行高 */
+        white-space: pre-wrap;
+        margin-top: 2px;
+      }
+
+      .alg-line {
+        display: grid;
+        grid-template-columns: 26px auto;  /* 行号略窄一点 */
+        column-gap: 8px;
+        align-items: baseline;
+        padding: 0;                         /* 去掉 padding */
+        margin: 0;                          /* 不要额外竖向间距 */
+      }
+
+      .alg-line + .alg-line {
+        margin-top: 1px;                    /* 行与行之间只保留 1px 的间隔 */
+      }
+
+      .alg-line .line-num {
+        color: var(--muted);
+        text-align: right;
+        padding-right: 2px;
+        font-size: 0.85em;
+        font-variant-numeric: tabular-nums;
+        user-select: none;
+      }
+
+      .comment{
+        color: var(--muted);
+        font-style: italic;
+        font-size: 0.9em;
+      }
+
+
+
 
     /* Responsive tweaks */
     @media (max-width: 640px){
@@ -347,13 +433,16 @@
  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
-  <h1>CS280A — Project 5: The Power of Diffusion Models!</h1>
+  <h1>Diffusion Models and Flow Matching</h1>
   <h3 style="text-align:center;">by Xiaolei Chu, Ph.D. candidate @ UC Berkeley</h3>
 
   <nav class="toc">
     <a class="pill" href="#0">Part A.0: Setup</a>
     <a class="pill" href="#1">Part A.1: Sampling Loops</a>
     <a class="pill" href="#2">Part A.2: Bells & Whistles</a>
+    <a class="pill" href="#3">Part B.1: Training a Single-Step Denoising UNet</a>
+    <a class="pill" href="#4">Part B.2: Training a Flow Matching Model</a>
+    <a class="pill" href="#5">Part B.3: A Better Time-conditioned only UNet</a>
   </nav>
 
   <a id="0"></a>
@@ -716,6 +805,720 @@
     <img src="plots/cal_cv_logo.png" alt="campanile_gaussian_blur" style="width: 20%; display: block; margin: 0 auto;">
     <figcaption>Figure 27. Design the course logo by iteratively CFG denoising the image with two prompt text, "an oil painting of UC Berkeley logo" and "an oil painting of the course logo of computer vision".</figcaption>
   </figure>
+
+    <a id="3"></a>
+  <h2>Part B.1: Training a Single-Step Denoising UNet</h2>
+  <p>
+    In this part, we will focus on training our own
+    <a href="https://arxiv.org/abs/2210.02747">Flow Matching</a> model on
+    <a href="http://yann.lecun.com/exdb/mnist/">MNIST</a> dataset. We choose the
+    <a href="https://arxiv.org/abs/1505.04597">UNet</a> model as the backbone and build it from scratch.
+  </p>
+
+  <h3>1.0 Recap of Flow Matching for Generative Modeling</h3>
+
+  <p>
+    Flow matching is a method for training continuous-time generative models by directly learning a
+    <em>probability flow</em> that transports a simple base distribution to a complex data distribution.
+    Instead of using stochastic diffusion processes, flow matching learns a deterministic ordinary
+    differential equation (ODE) whose solution maps base samples to data samples.
+  </p>
+
+  <p>
+    Let \( p_0(x) \) be a simple base distribution (e.g. standard Gaussian) and \( p_1(x) \) be the
+    data distribution. Flow matching introduces a time-dependent family of intermediate
+    distributions \( p_t(x) \), for \( t \in [0, 1] \), that smoothly connects them:
+  </p>
+
+  <div class="equation">
+    \( p_{t=0}(x) = p_0(x), \qquad p_{t=1}(x) = p_1(x). \)
+  </div>
+
+  <p>
+    The evolution of samples over time is described by an ODE:
+  </p>
+
+  <div class="equation">
+    \( \frac{d x_t}{d t} = v_\theta(t, x_t), \)
+  </div>
+
+  <p>
+    where \( v_\theta(t, x) \) is a neural network (the <em>velocity field</em>) with parameters
+    \( \theta \). This ODE induces a <em>probability flow</em> that pushes forward \( p_0 \) into \( p_1 \).
+  </p>
+
+  <p>
+    The time evolution of the distributions \( p_t(x) \) under the flow is governed by the
+    continuity equation:
+  </p>
+
+  <div class="equation">
+    \( \frac{\partial p_t(x)}{\partial t} + \nabla_x \cdot \big( p_t(x) \, v_\theta(t, x) \big) = 0. \)
+  </div>
+
+  <p>
+    Flow matching assumes we can construct a <em>probability path</em> \( p_t(x) \) between
+    \( p_0 \) and \( p_1 \), for which there exists an <em>oracle</em> or analytically defined
+    vector field \( u_t(x) \) such that:
+  </p>
+
+  <div class="equation">
+    \( \frac{\partial p_t(x)}{\partial t} + \nabla_x \cdot \big( p_t(x) \, u_t(x) \big) = 0. \)
+  </div>
+
+  <p>
+    There are a lot of ways to construct the vector field. What we use here is a simple but useful one,
+    coupling base and data samples via a simple interpolation, a.k.a.
+    <a href="https://arxiv.org/abs/2209.03003">rectified flow</a>.
+    Sample \( x_0 \sim p_0 \), \( x_1 \sim p_1 \), and define an interpolated state:
+  </p>
+
+  <div class="equation">
+    \( x_t = (1 - t)\, x_0 + t \, x_1. \)
+  </div>
+
+  <p>
+    The corresponding <em>oracle velocity</em> along this path is:
+  </p>
+
+  <div class="equation">
+    \( u_t(x_t) = \frac{d x_t}{d t} = x_1 - x_0. \)
+  </div>
+
+  <p>
+    In practice, we can sample triples \( (x_0, x_1, t) \), compute \( x_t \), and treat
+    \( (x_t, t) \) as inputs and \( u_t(x_t) = x_1 - x_0 \) as the regression target for
+    the model \( v_\theta \).
+  </p>
+
+  <p>
+    The flow matching objective is typically a mean-squared error between the learned
+    velocity field and the oracle velocity:
+  </p>
+
+  <div class="equation">
+    \( \mathcal{L}(\theta)
+      = \mathbb{E}_{t\sim \mathcal{U}\left(0,1\right), x_0 \sim p_0, x_1 \sim p_1}
+        \big[
+          \| v_\theta(t, x_t) - u_t(x_t) \|^2
+        \big],
+      \quad x_t = (1 - t)x_0 + t x_1. \)
+  </div>
+
+  <p>
+    Minimizing \( \mathcal{L}(\theta) \) encourages the learned flow to follow the same
+    probability evolution as the designed path \( p_t \).
+  </p>
+
+  <p>
+    After training, generative sampling proceeds by:
+  </p>
+  <ol>
+    <li>Sampling \( x_0 \sim p_0(x) \) (e.g. Gaussian noise).</li>
+    <li>
+      Solving the ODE forward in time:
+      <div class="equation">
+        \( \frac{d x_t}{d t} = v_\theta(t, x_t), \quad t \in [0, 1], \quad x_{t=0} = x_0. \)
+      </div>
+    </li>
+    <li>Taking \( x_{t=1} \) as a generated sample from an approximation of \( p_1(x) \).</li>
+  </ol>
+
+  <p>
+    Flow matching can be seen as a deterministic counterpart to diffusion-based generative
+    modeling. Diffusion models learn a score function for a noisy stochastic process and often
+    require reverse-time SDE or ODE solvers. In contrast, flow matching directly learns a
+    deterministic velocity field that transports probability mass, avoiding stochastic
+    perturbations during training and sampling.
+  </p>
+
+  <h3>1.1 Implementing the UNet</h3>
+
+  <p>
+    We implement the denoiser as a <a href="https://arxiv.org/abs/1505.04597">UNet</a>, which consists of
+    a few downsampling and upsampling blocks with skip connections. Specifically, the architecture
+    is shown in Figure 28.
+  </p>
+
+  <figure style="text-align: center%;">
+    <img src="plots/UNet_clean.png" alt="UNet_clean" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 28. The architecture of uncondtional Unet.</figcaption>
+  </figure>
+
+  <p>
+    The diagram above uses a number of standard tensor operations defined as follows:
+  </p>
+
+  <figure style="text-align: center%;">
+    <img src="plots/tensor_operations.png" alt="tensor_operations" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 29. The details of tensor operations.</figcaption>
+  </figure>
+
+  <h3>1.2 Using the UNet to Train a Denoiser</h3>
+
+  <p>
+    For now, we focus on the simpler problem, i.e., one-step denoising. To train our denoiser, we need
+    to generate training data pairs of \((z,x)\), where each \(x\) is a clean MNIST digit.
+    For each training batch, we can generate \(z\) from \(x\) using the following noising process:
+  </p>
+
+  <div class="equation">
+    \( z = x + \sigma \epsilon, \quad \text{where} \ \epsilon \sim \mathcal{N}\left(\mathbf{0},\mathbf{I}\right). \)
+  </div>
+
+  <p>
+    where \(\sigma\) controls the noise level. As shown in Figure 30, the images are contaminated with
+    noise at different intensities, each determined by a specific \(\sigma\) value.
+  </p>
+
+  <figure style="text-align: center%;">
+    <img src="plots/mnist_noise_smooth_loop.gif" alt="mnist_multiple_noise" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 30. The noising process with gradually increasing \(\sigma\).</figcaption>
+  </figure>
+
+  <h4>1.2.1 Training</h4>
+
+  <p>
+    Now we train this denoiser to denoise noisy image \(z\) with \(\sigma=0.5\) applied to a clean image \(x\),
+    which means other \(\sigma\) values are out-of-distribution testing cases. The configuration of this
+    one-step denoising model is shown in Table&nbsp;1. The procedure of the training loss is shown in Figure&nbsp;31.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Table 1. Training Hyperparameters of the one-step unconditional UNet.</caption>
+      <tr>
+        <th>Parameter</th>
+        <th>Value</th>
+      </tr>
+      <tr>
+        <td>Noise level &sigma;</td>
+        <td>0.5</td>
+      </tr>
+      <tr>
+        <td>Training size</td>
+        <td>60000</td>
+      </tr>
+      <tr>
+        <td>Batch size</td>
+        <td>256</td>
+      </tr>
+      <tr>
+        <td>Number of Epochs</td>
+        <td>5</td>
+      </tr>
+      <tr>
+        <td>Hidden dimension <em>D</em></td>
+        <td>128</td>
+      </tr>
+      <tr>
+        <td>Learning rate</td>
+        <td>1e-4</td>
+      </tr>
+      <tr>
+        <td>Optimizer</td>
+        <td>Adam</td>
+      </tr>
+      <tr>
+        <td>Loss function</td>
+        <td>MSE Loss</td>
+      </tr>
+    </table>
+  </div>
+
+  <figure style="text-align: center%;">
+    <img src="plots/mnist_training_curve.png" alt="mnist_multiple_noise" style="width: 60%; display: block; margin: 0 auto;">
+    <figcaption>Figure 31. The training loss curve of the one-step unconditional UNet.</figcaption>
+  </figure>
+
+  <p>
+    With the noise level \(\sigma = 0.5\), we sample results on the test set to see if the one-step denoising
+    UNet can work. In Figure 32, we can find that noise level 0.5 is kind of large because, for example,
+    it is hard for people to tell the noisy input with the digit "5". The convergence is very fast so that
+    even with one epoch training, the denoising effect is satisfactory. After 5 epoch training, the results
+    look very good.
+  </p>
+
+  <figure style="text-align: center%;">
+    <img src="plots/mnist_test_results.png" alt="mnist_test_results" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 32. The results of the one-step denoising UNet on the test set with noise level \(\sigma = 0.5\): noisy input, no training, epoch from 1 to 5, and ground truth.</figcaption>
+  </figure>
+
+  <h4>1.2.2 Out-of-Distribution Testing</h4>
+
+  <p>
+    Our one-step denoiser was trained with \(\sigma = 0.5\). Now let's examine its out-of-distribution capacity.
+    We vary the levels of noise to see if the one-step denoiser still works. In Figure 33, we can notice when
+    the noise is not large (\(\sigma \le 0.5\)), the one-step denoiser can somehow generalize well even though we
+    only train it on the noise level 0.5; however, when \(\sigma > 0.5\), the denoising capacity decreases a lot.
+  </p>
+
+  <figure style="text-align: center%;">
+    <img src="plots/OOD_testing.png" alt="OOD_testing" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 33. Out-of-distribution examination of the one-step denoising UNet.</figcaption>
+  </figure>
+
+  <h4>1.2.3 Denoising Pure Noise</h4>
+
+  <p>
+    To make denoising a generative task, now we can denoise pure, random Gaussian noise. We can think of this as
+    starting with a blank canvas \(z = \epsilon\), where \(\epsilon \sim \mathcal{N}\left(\mathbf{0}, \mathbf{I}\right)\),
+    and denoising it to get a clean image \(x\). The training loss curve for this case is shown in Figure 34.
+    Compared with Figure 31, the training loss curve with \(\sigma = 0.5\), we know that the training loss does not
+    converge well. We sample some results on pure noise after 1 to 5 epochs, as shown in Figure 35. Figure 35 means
+    that denoising pure, random Gaussian noise with one-step unconditonal UNet does not work. This is foreseeable
+    because we choose MSE loss as the criterion, which means the model will learn the average image of the training set.
+    To validate this idea, in Figure 36, we show the average image of all images in the training set, which is consistent
+    with Figure 35 (epoch 5).
+  </p>
+
+  <figure style="text-align: center%;">
+    <img src="plots/mnist_pure_noise_training_curve.png" alt="mnist_pure_noise_training_curve" style="width: 60%; display: block; margin: 0 auto;">
+    <figcaption>Figure 34. The training loss curve of the one-step unconditional UNet when denoising pure random, Gaussian noise.</figcaption>
+  </figure>
+
+  <figure style="text-align: center%;">
+    <img src="plots/mnist_pure_noise_test_results.png" alt="mnist_pure_noise_test_results" style="width: 80%; display: block; margin: 0 auto;">
+    <figcaption>Figure 35. Denoising pure random, Gaussian noise after different training epochs.</figcaption>
+  </figure>
+
+  <figure style="text-align: center%;">
+    <img src="plots/mnist_mean.png" alt="mnist_mean" style="width: 30%; display: block; margin: 0 auto;">
+    <figcaption>Figure 36. The average image of the training set.</figcaption>
+  </figure>
+
+  <a id="4"></a>
+  <h2>Part B.2: Training a Flow Matching Model</h2>
+
+  <p>
+    We just saw that one-step denoising does not work well for generative tasks. In this part, we will iteratively
+    denoise the image with flow matching, specifically, the rectified flow.
+  </p>
+
+  <h3>2.1 Adding Time Conditioning to UNet</h3>
+
+  <p>
+    We need a way to inject scalar \(t\) into our UNet model to condition it. There are many ways to do this. In this
+    part, we use a fully-connected block (FCBlock) to project \(t\) on to \(2D\) dimensions, then concat it with the
+    "Unflatten" and "UpBlock" module, as shown in Figure 37. FCBlock is actually a bunch of linear layers with activation
+    functions, as shown in Figure 38.
+  </p>
+
+  <figure style="text-align: center%;">
+    <img src="plots/UNet_conditional.png" alt="UNet_conditional" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 37. The architecture of conditional UNet.</figcaption>
+  </figure>
+
+  <figure style="text-align: center%;">
+    <img src="plots/FCBlock.png" alt="FCBlock" style="width: 30%; display: block; margin: 0 auto;">
+    <figcaption>Figure 38. The FCBlock for conditioning.</figcaption>
+  </figure>
+
+  <p>We can embed \(t\) by following this pseudo code:</p>
+
+  <div class="code-block">
+  fc1_t = FCBlock(...)
+  fc2_t = FCBlock(...)
+
+  # the t passed in here should be normalized to be in the range [0, 1]
+  t1 = fc1_t(t)
+  t2 = fc2_t(t)
+
+  # Follow diagram to get unflatten.
+  # Replace the original unflatten with modulated unflatten.
+  unflatten = unflatten * t1
+  # Follow diagram to get up1.
+  ...
+  # Replace the original up1 with modulated up1.
+  up1 = up1 * t2
+  # Follow diagram to get the output.
+  ...
+  </div>
+
+  <h3>2.2 Training the UNet</h3>
+
+  <p>
+    The algorithm to train the time-conditioned UNet can be found below.
+  </p>
+
+  <div class="algorithm-card">
+    <div class="algorithm-title">Algorithm 1 &nbsp; Time-Conditional Training</div>
+
+    <div class="algorithm-content">
+      <div class="alg-line"><div class="line-num">1:</div><div>repeat</div></div>
+      <div class="alg-line"><div class="line-num">2:</div><div>\(x_1 \sim\) clean image from training set</div></div>
+      <div class="alg-line"><div class="line-num">3:</div><div>\(t\sim \mathcal{U}\left(0, 1\right)\)</div></div>
+      <div class="alg-line"><div class="line-num">4:</div><div>\(x_0 \sim \mathcal{N}\left(\mathbf{0}, \mathbf{I}\right)\)</div></div>
+      <div class="alg-line"><div class="line-num">5:</div><div>\(x_t = \left(1 - t\right) x_0 + t x_1\)</div></div>
+      <div class="alg-line"><div class="line-num">6:</div><div>Take gradient descent step on \( \nabla_{\theta} \left\| \left(x_1 - x_0\right) - u_{\theta} \left(x_t, t\right) \right\|^2 \)</div></div>
+      <div class="alg-line"><div class="line-num">7:</div><div>until happy</div></div>
+    </div>
+  </div>
+
+  <p>
+    The model configuration for the time-conditioned UNet is shown in Table 2.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Table 2. Training Hyperparameters of the time-conditioned UNet.</caption>
+      <tr>
+        <th>Parameter</th>
+        <th>Value</th>
+      </tr>
+      <tr>
+        <td>Training size</td>
+        <td>60000</td>
+      </tr>
+      <tr>
+        <td>Batch size</td>
+        <td>64</td>
+      </tr>
+      <tr>
+        <td>Number of Epochs</td>
+        <td>10</td>
+      </tr>
+      <tr>
+        <td>Hidden dimension <em>D</em></td>
+        <td>64</td>
+      </tr>
+      <tr>
+        <td>Initial learning rate</td>
+        <td>1e-2</td>
+      </tr>
+      <tr>
+        <td>Optimizer</td>
+        <td>Adam</td>
+      </tr>
+      <tr>
+        <td>Scheduler</td>
+        <td>Exponential learning rate decay with \(\gamma = 0.1^{1.0 / \text{num_epochs}}\)</td>
+      </tr>
+      <tr>
+        <td>Loss function</td>
+        <td>MSE Loss</td>
+      </tr>
+    </table>
+  </div>
+
+  <p>
+    The corresponding training loss curve is shown in Figure 39.
+  </p>
+
+  <figure style="text-align: center%;">
+    <img src="plots/mnist_multi_step_training_curve.png" alt="mnist_multi_step_training_curve" style="width: 60%; display: block; margin: 0 auto;">
+    <figcaption>Figure 39. The training loss curve of the time-conditioned UNet.</figcaption>
+  </figure>
+
+  <h3>2.3 Sampling from the UNet</h3>
+
+  <p>
+    We can now use the trained time-conditioned UNet for iterative denoising using the algorithm below.
+  </p>
+
+  <div class="algorithm-card">
+    <div class="algorithm-title">Algorithm 2 &nbsp; Sampling</div>
+
+    <div class="algorithm-content">
+      <div class="alg-line">
+        <div class="line-num">1:</div>
+        <div><strong>input:</strong> \(T\) timesteps</div>
+      </div>
+
+      <div class="alg-line">
+        <div class="line-num">2:</div>
+        <div>\(x_t = x_0 \sim \mathcal{N}(0, \mathbf{I})\)</div>
+      </div>
+
+      <div class="alg-line">
+        <div class="line-num">3:</div>
+        <div><strong>for</strong> \(t\) from 0 to 1, step size \( \frac{1}{T} \) <strong>do</strong></div>
+      </div>
+
+      <div class="alg-line">
+        <div class="line-num">4:</div>
+        <div style="padding-left: 1.5em;">\( x_t = x_t + \frac{1}{T} u_{\theta}(x_t, t) \)</div>
+      </div>
+
+      <div class="alg-line">
+        <div class="line-num">5:</div>
+        <div><strong>end for</strong></div>
+      </div>
+
+      <div class="alg-line">
+        <div class="line-num">6:</div>
+        <div><strong>return</strong> \(x_t\)</div>
+      </div>
+    </div>
+  </div>
+
+  <p>
+    We show our sampling results from the time-conditioned UNet from 1 to 10 epochs in Figure 40. We can find with more
+    training epochs, the results are gradually getting better. At the very beginning stage, say epoch 1, the generated
+    image is vague and is hard to distinguish. With enough training, the image first becomes clearer; then we can gradually
+    tell the digit in each image, though some of which are not like a normal digit. These results are expected because it is
+    only time-conditioned but not class-conditioned, which means the denoiser tries to imitate randomly from the training set
+    and does not know the specific digit to generate.
+  </p>
+
+  <figure class="figure-group">
+    <div class="subfigures">
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_generation_epoch0.png" alt="epoch 0">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_generation_epoch1.png" alt="epoch 1">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_generation_epoch2.png" alt="epoch 2">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_generation_epoch3.png" alt="epoch 3">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_generation_epoch4.png" alt="epoch 4">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_generation_epoch5.png" alt="epoch 5">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_generation_epoch6.png" alt="epoch 6">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_generation_epoch7.png" alt="epoch 7">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_generation_epoch8.png" alt="epoch 8">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_generation_epoch9.png" alt="epoch 9">
+      </div>
+    </div>
+
+    <figcaption class="main-caption">
+      Figure 40. The sampling results from the time-conditioned UNet from 1 to 10 epochs.
+    </figcaption>
+  </figure>
+
+
+    <h3>2.4 Adding Class-Conditioning to UNet</h3>
+    <p>
+      Now let's make it a class-conditioned UNet, which should be able to generate distinguishable digits
+      according to the prompt. In this part, we make the class-conditioning vector \(c\) a one-hot vector
+      instead of a single scalar because we still want our UNet to work without it being conditioned on the
+      class (recall how classifier-free guidance works). To make the classifier-free guidance work, we
+      implement dropout for 10% of the time, which means we set the one-hot vector \(c\) to be the zero
+      vector. The details of how to embed \(t\) and \(c\) can be found below.
+    </p>
+
+    <div class="code-block">
+    fc1_t = FCBlock(...)
+    fc2_t = FCBlock(...)
+    fc1_c = FCBlock(...)
+    fc2_c = FCBlock(...)
+
+    # the t passed in here should be normalized to be in the range [0, 1]
+    t1 = fc1_t(t)
+    t2 = fc2_t(t)
+    c1 = fc1_c(c)
+    c2 = fc2_c(c)
+
+    # Follow diagram to get unflatten.
+    # Replace the original unflatten with modulated unflatten.
+    unflatten = c1 * unflatten + t1  # (unflatten = t1 * unflatten + c1 can also work)
+    # Follow diagram to get up1.
+    ...
+    # Replace the original up1 with modulated up1.
+    up1 = c2 * up1 + t2              # (up1 = t2 * up1 + c2 can also work)
+    # Follow diagram to get the output.
+    ...
+    </div>
+
+    <h3>2.5 Training the UNet</h3>
+
+    <p>
+      The algorithm to train the class-conditioned UNet can be found below.
+    </p>
+
+    <div class="algorithm-card">
+      <div class="algorithm-title">Algorithm 3 &nbsp; Class-Conditional Training</div>
+
+      <div class="algorithm-content">
+        <div class="alg-line">
+          <div class="line-num">1:</div>
+          <div>repeat</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">2:</div>
+          <div>\(x_1, c \sim\) clean image and label from training set</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">3:</div>
+          <div>Make \(c\) into a one-hot vector</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">4:</div>
+          <div>with probability \(p_{\text{uncond}}\) set \(c\) to zero vector</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">5:</div>
+          <div>\(t \sim \mathcal{U}\left(0, 1\right)\)</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">6:</div>
+          <div>\(x_0 \sim \mathcal{N}\left(\mathbf{0}, \mathbf{I}\right)\)</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">7:</div>
+          <div>\(x_t = (1 - t)\,x_0 + t\,x_1\)</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">8:</div>
+          <div>Take gradient descent step on \( \nabla_{\theta} \left\| (x_1 - x_0) - u_{\theta}(x_t, t, c) \right\|^2 \)</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">9:</div>
+          <div>until happy</div>
+        </div>
+      </div>
+    </div>
+
+    <p>
+      The model configuration for the class-conditioned UNet is shown in Table&nbsp;3.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Table 3. Training Hyperparameters of the class-conditioned UNet.</caption>
+        <tr>
+          <th>Parameter</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>Training size</td>
+          <td>60000</td>
+        </tr>
+        <tr>
+          <td>Batch size</td>
+          <td>64</td>
+        </tr>
+        <tr>
+          <td>Number of Epochs</td>
+          <td>10</td>
+        </tr>
+        <tr>
+          <td>Hidden dimension <em>D</em></td>
+          <td>64</td>
+        </tr>
+        <tr>
+          <td>Initial learning rate</td>
+          <td>1e-2</td>
+        </tr>
+        <tr>
+          <td>Optimizer</td>
+          <td>Adam</td>
+        </tr>
+        <tr>
+          <td>Scheduler</td>
+          <td>Exponential learning rate decay with \(\gamma = 0.1^{1.0 / \text{num_epochs}}\)</td>
+        </tr>
+        <tr>
+          <td>Loss function</td>
+          <td>MSE Loss</td>
+        </tr>
+      </table>
+    </div>
+
+    <p>
+      The corresponding training loss curve is shown in Figure&nbsp;41.
+    </p>
+
+    <figure style="text-align: center;">
+      <img src="plots/mnist_multi_step_guided_training_curve.png" alt="mnist_multi_step_guided_training_curve" style="width: 60%; display: block; margin: 0 auto;">
+      <figcaption>Figure 41. The training loss curve of the class-conditioned UNet.</figcaption>
+    </figure>
+
+    <h3>2.6 Sampling from the UNet</h3>
+
+    <p>
+      Now we will sample with class-conditioning and use classifier-free guidance with \(\gamma = 5.0\).
+      The algorithm is shown in Algorithm&nbsp;4.
+    </p>
+
+    <div class="algorithm-card">
+      <div class="algorithm-title">Algorithm 4 &nbsp; Class-Conditional Sampling</div>
+
+      <div class="algorithm-content">
+        <div class="alg-line">
+          <div class="line-num">1:</div>
+          <div><strong>input:</strong> one-hot vector \(c\), classifier guidance scale \(\gamma\)</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">2:</div>
+          <div>\(x_t = x_0 \sim \mathcal{N}\left(\mathbf{0}, \mathbf{I}\right)\)</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">3:</div>
+          <div><strong>for</strong> \(t\) from 0 to 1, step size \( \frac{1}{T} \) <strong>do</strong></div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">4:</div>
+          <div>\(u_{\text{uncond}} = u_{\theta}(x_t, t, 0)\)</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">5:</div>
+          <div>\(u_{\text{cond}} = u_{\theta}(x_t, t, c)\)</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">6:</div>
+          <div>
+            \(u = u_{\text{uncond}} + \gamma \left( u_{\text{cond}} - u_{\text{uncond}} \right)\)
+            &nbsp;&nbsp;<span class="comment">▷ Classifier-free guidance</span>
+          </div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">7:</div>
+          <div>\(x_t = x_t + \frac{1}{T} u\)</div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">8:</div>
+          <div><strong>end for</strong></div>
+        </div>
+
+        <div class="alg-line">
+          <div class="line-num">9:</div>
+          <div><strong>return</strong> \(x_t\)</div>
+        </div>
+      </div>
+    </div>
+
+    <p>
+      Figure&nbsp;42 shows the sampling results from the class-conditioned UNet from 1 to 10 epochs. We can find
+      that the denoising capacity becomes better with more training epochs. Compared with the time-conditioned UNet,
+      the digit is more distinguishable and we can guide the generation, which is preferable.
+    </p>
+
+    <figure style="text-align: center;">
+      <img src="plots/denoising_class_conditioned.gif" alt="denoising_class_conditioned" style="width: 80%; display: block; margin: 0 auto;">
+      <figcaption>Figure 42. The sampling results from the class-conditioned UNet from 1 to 10 epochs.</figcaption>
+    </figure>
+
+
 
 </body>
 </html>
