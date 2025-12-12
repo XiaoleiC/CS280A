@@ -981,8 +981,135 @@
   <p>
     Now we train this denoiser to denoise noisy image \(z\) with \(\sigma=0.5\) applied to a clean image \(x\),
     which means other \(\sigma\) values are out-of-distribution testing cases. The configuration of this
-    one-step denoising model is shown in Table&nbsp;1. The procedure of the training loss is shown in Figure&nbsp;31.
+    one-step denoising model is shown in Table&nbsp;1. The procedure of the training loss is shown in Figure&nbsp;31. You can expand the following unconditional UNet architecture block to see the details.
   </p>
+
+  <section class="card" id="unconditional-unet-arch">
+  <h3>Unconditional UNet — Network Architecture (PyTorch printout)</h3>
+  <p class="muted">
+    The following block is a verbatim module tree for the UNet used in this project.
+  </p>
+
+  <details open>
+    <summary style="cursor:pointer; font-weight:600; margin: 6px 0 10px;">
+      Show / hide architecture text
+    </summary>
+
+    <div class="code-block">UnconditionalUNet(
+      (convblock1): ConvBlock(
+        (conv1): Conv(
+          (conv): Conv2d(1, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (gelu): GELU(approximate='none')
+        )
+        (conv2): Conv(
+          (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (gelu): GELU(approximate='none')
+        )
+      )
+      (downblock1): DownBlock(
+        (conv1): DownConv(
+          (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (gelu): GELU(approximate='none')
+        )
+        (conv2): ConvBlock(
+          (conv1): Conv(
+            (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): Conv(
+            (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+        )
+      )
+      (downblock2): DownBlock(
+        (conv1): DownConv(
+          (conv): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+          (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (gelu): GELU(approximate='none')
+        )
+        (conv2): ConvBlock(
+          (conv1): Conv(
+            (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): Conv(
+            (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+        )
+      )
+      (flatten): Flatten(
+        (flatten): AvgPool2d(kernel_size=7, stride=7, padding=0)
+        (gelu): GELU(approximate='none')
+      )
+      (unflatten): Unflatten(
+        (conv): ConvTranspose2d(256, 256, kernel_size=(7, 7), stride=(7, 7))
+        (bn): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (gelu): GELU(approximate='none')
+      )
+      (upblock1): UpBlock(
+        (conv1): UpConv(
+          (conv): ConvTranspose2d(512, 128, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (gelu): GELU(approximate='none')
+        )
+        (conv2): ConvBlock(
+          (conv1): Conv(
+            (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): Conv(
+            (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+        )
+      )
+      (upblock2): UpBlock(
+        (conv1): UpConv(
+          (conv): ConvTranspose2d(256, 128, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (gelu): GELU(approximate='none')
+        )
+        (conv2): ConvBlock(
+          (conv1): Conv(
+            (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): Conv(
+            (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+        )
+      )
+      (convblock2): ConvBlock(
+        (conv1): Conv(
+          (conv): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (gelu): GELU(approximate='none')
+        )
+        (conv2): Conv(
+          (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (gelu): GELU(approximate='none')
+        )
+      )
+      (conv): Conv2d(128, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    )</div>
+      </details>
+    </section>
+
 
   <div class="table-wrap">
     <table>
@@ -1101,8 +1228,147 @@
     We need a way to inject scalar \(t\) into our UNet model to condition it. There are many ways to do this. In this
     part, we use a fully-connected block (FCBlock) to project \(t\) on to \(2D\) dimensions, then concat it with the
     "Unflatten" and "UpBlock" module, as shown in Figure 37. FCBlock is actually a bunch of linear layers with activation
-    functions, as shown in Figure 38.
+    functions, as shown in Figure 38. You can expand the time conditioned UNet architecture block to see the details.
   </p>
+
+  <section class="card" id="time-conditional-fm-arch">
+  <h3>TimeConditionalFM — Network Architecture (PyTorch printout)</h3>
+  <p class="muted">
+    The following block is a verbatim module tree for the time-conditional FM model used in this project.
+  </p>
+
+  <details open>
+    <summary style="cursor:pointer; font-weight:600; margin: 6px 0 10px;">
+      Show / hide architecture text
+    </summary>
+
+    <div class="code-block">TimeConditionalFM(
+      (unet): TimeConditionalUNet(
+        (convblock1): ConvBlock(
+          (conv1): Conv(
+            (conv): Conv2d(1, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): Conv(
+            (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+        )
+        (downblock1): DownBlock(
+          (conv1): DownConv(
+            (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): ConvBlock(
+            (conv1): Conv(
+              (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+            (conv2): Conv(
+              (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+          )
+        )
+        (downblock2): DownBlock(
+          (conv1): DownConv(
+            (conv): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): ConvBlock(
+            (conv1): Conv(
+              (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+            (conv2): Conv(
+              (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+          )
+        )
+        (flatten): Flatten(
+          (flatten): AvgPool2d(kernel_size=7, stride=7, padding=0)
+          (gelu): GELU(approximate='none')
+        )
+        (unflatten): Unflatten(
+          (conv): ConvTranspose2d(128, 128, kernel_size=(7, 7), stride=(7, 7))
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (gelu): GELU(approximate='none')
+        )
+        (upblock1): UpBlock(
+          (conv1): UpConv(
+            (conv): ConvTranspose2d(256, 64, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): ConvBlock(
+            (conv1): Conv(
+              (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+            (conv2): Conv(
+              (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+          )
+        )
+        (upblock2): UpBlock(
+          (conv1): UpConv(
+            (conv): ConvTranspose2d(128, 64, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): ConvBlock(
+            (conv1): Conv(
+              (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+            (conv2): Conv(
+              (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+          )
+        )
+        (convblock2): ConvBlock(
+          (conv1): Conv(
+            (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): Conv(
+            (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+        )
+        (conv): Conv2d(64, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (fc1): FCBlock(
+          (fc1): Linear(in_features=1, out_features=128, bias=True)
+          (fc2): Linear(in_features=128, out_features=128, bias=True)
+          (gelu): GELU(approximate='none')
+        )
+        (fc2): FCBlock(
+          (fc1): Linear(in_features=1, out_features=64, bias=True)
+          (fc2): Linear(in_features=64, out_features=64, bias=True)
+          (gelu): GELU(approximate='none')
+        )
+      )
+    )</div>
+      </details>
+    </section>
+
 
   <figure style="text-align: center%;">
     <img src="plots/UNet_conditional.png" alt="UNet_conditional" style="width: 100%; display: block; margin: 0 auto;">
@@ -1308,8 +1574,157 @@
       instead of a single scalar because we still want our UNet to work without it being conditioned on the
       class (recall how classifier-free guidance works). To make the classifier-free guidance work, we
       implement dropout for 10% of the time, which means we set the one-hot vector \(c\) to be the zero
-      vector. The details of how to embed \(t\) and \(c\) can be found below.
+      vector. The details of how to embed \(t\) and \(c\) can be found below. You can also expand the class-conditioned UNet architecture block to see the details.
     </p>
+
+    <section class="card" id="class-conditional-fm-arch">
+  <h3>ClassConditionalFM — Network Architecture (PyTorch printout)</h3>
+  <p class="muted">
+    The following block is a verbatim module tree for the class-conditional FM model used in this project.
+  </p>
+
+  <details open>
+    <summary style="cursor:pointer; font-weight:600; margin: 6px 0 10px;">
+      Show / hide architecture text
+    </summary>
+
+    <div class="code-block">ClassConditionalFM(
+      (unet): ClassConditionalUNet(
+        (convblock1): ConvBlock(
+          (conv1): Conv(
+            (conv): Conv2d(1, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): Conv(
+            (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+        )
+        (downblock1): DownBlock(
+          (conv1): DownConv(
+            (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): ConvBlock(
+            (conv1): Conv(
+              (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+            (conv2): Conv(
+              (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+          )
+        )
+        (downblock2): DownBlock(
+          (conv1): DownConv(
+            (conv): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+            (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): ConvBlock(
+            (conv1): Conv(
+              (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+            (conv2): Conv(
+              (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+          )
+        )
+        (flatten): Flatten(
+          (flatten): AvgPool2d(kernel_size=7, stride=7, padding=0)
+          (gelu): GELU(approximate='none')
+        )
+        (unflatten): Unflatten(
+          (conv): ConvTranspose2d(128, 128, kernel_size=(7, 7), stride=(7, 7))
+          (bn): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (gelu): GELU(approximate='none')
+        )
+        (upblock1): UpBlock(
+          (conv1): UpConv(
+            (conv): ConvTranspose2d(256, 64, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): ConvBlock(
+            (conv1): Conv(
+              (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+            (conv2): Conv(
+              (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+          )
+        )
+        (upblock2): UpBlock(
+          (conv1): UpConv(
+            (conv): ConvTranspose2d(128, 64, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): ConvBlock(
+            (conv1): Conv(
+              (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+            (conv2): Conv(
+              (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+              (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (gelu): GELU(approximate='none')
+            )
+          )
+        )
+        (convblock2): ConvBlock(
+          (conv1): Conv(
+            (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+          (conv2): Conv(
+            (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (bn): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (gelu): GELU(approximate='none')
+          )
+        )
+        (conv): Conv2d(64, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        (fc1): FCBlock(
+          (fc1): Linear(in_features=1, out_features=128, bias=True)
+          (fc2): Linear(in_features=128, out_features=128, bias=True)
+          (gelu): GELU(approximate='none')
+        )
+        (fc2): FCBlock(
+          (fc1): Linear(in_features=1, out_features=64, bias=True)
+          (fc2): Linear(in_features=64, out_features=64, bias=True)
+          (gelu): GELU(approximate='none')
+        )
+        (fc1_c): FCBlock(
+          (fc1): Linear(in_features=10, out_features=128, bias=True)
+          (fc2): Linear(in_features=128, out_features=128, bias=True)
+          (gelu): GELU(approximate='none')
+        )
+        (fc2_c): FCBlock(
+          (fc1): Linear(in_features=10, out_features=64, bias=True)
+          (fc2): Linear(in_features=64, out_features=64, bias=True)
+          (gelu): GELU(approximate='none')
+        )
+      )
+    )</div>
+      </details>
+    </section>
+
 
     <div class="code-block">
     fc1_t = FCBlock(...)
@@ -1517,6 +1932,155 @@
       <img src="plots/denoising_class_conditioned.gif" alt="denoising_class_conditioned" style="width: 80%; display: block; margin: 0 auto;">
       <figcaption>Figure 42. The sampling results from the class-conditioned UNet from 1 to 10 epochs.</figcaption>
     </figure>
+
+    <p>
+      Now let's try to remove the learning rate scheduler to see how it affects the training and sampling results. We employ the same training settings as before except removing the learning rate scheduler. The training loss curve is shown in Figure&nbsp;43, where you can see the training loss is surprisingly, nearly the same as before. It means that the flow matching model is very robust to the learning rate choice (at least in this simple experiment). The sampling results are similar to before as well, as shown in 
+    </p>
+
+    <figure style="text-align: center;">
+      <img src="plots/mnist_multi_step_guided_noscheduler_training_curve.png" alt="mnist_multi_step_guided_training_curve_no_scheduler" style="width: 60%; display: block; margin: 0 auto;">
+      <figcaption>Figure 43. The training loss curve of the class-conditioned UNet without learning rate scheduler.</figcaption>
+    </figure>
+
+    <figure style="text-align: center;">
+      <img src="plots/denoising_class_conditioned_noscheduler.gif" alt="denoising_class_conditioned_noscheduler" style="width: 80%; display: block; margin: 0 auto;">
+      <figcaption>Figure 42. The sampling results from the class-conditioned UNet without learning rate scheduler from 1 to 10 epochs.</figcaption>
+    </figure>
+
+
+  <a id="5"></a>
+  <h2>Part B.3: A Better Time-conditioned only UNet</h2>
+
+  <p>
+    In our previous time-conditioned only UNet experiment, we found that the generated images are not perfect, though most of them can be recognized as digits. Typically, the time-condtioned only UNet cannot surpass the class-conditioned UNet. However, we can definitely make it better than before by tuning the model architecture and training hyperparameters. In this part, we will show you one possible way to improve the time-conditioned only UNet. The model configuration for the improved time-conditioned UNet is shown in Table&nbsp;4. 
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Table 4. Training Hyperparameters of the improved time-conditioned UNet.</caption>
+      <tr>
+        <th>Parameter</th>
+        <th>Value</th>
+      </tr>
+      <tr>
+        <td>Training size</td>
+        <td>60000</td>
+      </tr>
+      <tr>
+        <td>Batch size</td>
+        <td>64</td>
+      </tr>
+      <tr>
+        <td>Number of Epochs</td>
+        <td>20</td>
+      </tr>
+      <tr>
+        <td>Hidden dimension <em>D</em></td>
+        <td>128</td>
+      </tr>
+      <tr>
+        <td>Initial learning rate</td>
+        <td>5e-3</td>
+      </tr>
+      <tr>
+        <td>Optimizer</td>
+        <td>Adam</td>
+      </tr>
+      <tr>
+        <td>Scheduler</td>
+        <td>Exponential learning rate decay with \(\gamma = 0.1^{1.0 / \text{num_epochs}}\)</td>
+      </tr>
+      <tr>
+        <td>Loss function</td>
+        <td>MSE Loss</td>
+      </tr>
+    </table>
+
+  </div>
+
+  <p>
+    The corresponding training loss curve is shown in Figure&nbsp;44, where the training loss (0.078) is lower than before (0.091), indicating a better model fit.
+  </p>
+
+  <figure style="text-align: center;">
+    <img src="plots/mnist_multi_step_improved_training_curve.png" alt="mnist_multi_step_improved_training_curve" style="width: 60%; display: block; margin: 0 auto;">
+    <figcaption>Figure 44. The training loss curve of the improved time-conditioned UNet.</figcaption>
+  </figure>
+
+  <p>
+    Figure&nbsp;45 shows the sampling results from the improved time-conditioned UNet from 1 to 20 epochs. We can find that the denoising capacity becomes better with more training epochs. Compared with the previous time-conditioned UNet, the digit is more distinguishable and some of them are even comparable to the class-conditioned UNet results.
+  </p>
+
+  <figure class="figure-group">
+    <div class="subfigures">
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch0.png" alt="epoch 0">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch1.png" alt="epoch 1">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch2.png" alt="epoch 2">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch3.png" alt="epoch 3">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch4.png" alt="epoch 4">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch5.png" alt="epoch 5">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch6.png" alt="epoch 6">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch7.png" alt="epoch 7">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch8.png" alt="epoch 8">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch9.png" alt="epoch 9">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch10.png" alt="epoch 10">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch11.png" alt="epoch 11">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch12.png" alt="epoch 12">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch13.png" alt="epoch 13">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch14.png" alt="epoch 14">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch15.png" alt="epoch 15">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch16.png" alt="epoch 16">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch17.png" alt="epoch 17">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch18.png" alt="epoch 18">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_improved_generation_epoch19.png" alt="epoch 19">
+      </div>
+    </div>
+
+    <figcaption class="main-caption">
+      Figure 45. The sampling results from the improved time-conditioned UNet from 1 to 20 epochs.
+    </figcaption>
+  </figure>
+
+
 
 
 
