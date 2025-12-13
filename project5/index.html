@@ -972,8 +972,13 @@
   </p>
 
   <figure style="text-align: center%;">
+    <img src="plots/mnist_multiple_noise.png" alt="mnist_multiple_noise_png" style="width: 100%; display: block; margin: 0 auto;">
+    <figcaption>Figure 30 (a). The noising process with \(\sigma = \left[0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0\right]\).</figcaption>
+  </figure>
+
+  <figure style="text-align: center%;">
     <img src="plots/mnist_noise_smooth_loop.gif" alt="mnist_multiple_noise" style="width: 100%; display: block; margin: 0 auto;">
-    <figcaption>Figure 30. The noising process with gradually increasing \(\sigma\).</figcaption>
+    <figcaption>Figure 30 (b). The animation of the noising process with gradually changing \(\sigma\).</figcaption>
   </figure>
 
   <h4>1.2.1 Training</h4>
@@ -1928,9 +1933,48 @@
       the digit is more distinguishable and we can guide the generation, which is preferable.
     </p>
 
+    <figure class="figure-group">
+    <div class="subfigures">
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_generation_epoch0.png" alt="epoch 0">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_generation_epoch1.png" alt="epoch 1">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_generation_epoch2.png" alt="epoch 2">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_generation_epoch3.png" alt="epoch 3">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_generation_epoch4.png" alt="epoch 4">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_generation_epoch5.png" alt="epoch 5">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_generation_epoch6.png" alt="epoch 6">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_generation_epoch7.png" alt="epoch 7">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_generation_epoch8.png" alt="epoch 8">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_generation_epoch9.png" alt="epoch 9">
+      </div>
+    </div>
+
+    <figcaption class="main-caption">
+      Figure 42 (a). The sampling results from the class-conditioned UNet from 1 to 10 epochs.
+    </figcaption>
+    </figure>
+
     <figure style="text-align: center;">
       <img src="plots/denoising_class_conditioned.gif" alt="denoising_class_conditioned" style="width: 80%; display: block; margin: 0 auto;">
-      <figcaption>Figure 42. The sampling results from the class-conditioned UNet from 1 to 10 epochs.</figcaption>
+      <figcaption>Figure 42 (b). The animation of the sampling results from the class-conditioned UNet from 1 to 10 epochs.</figcaption>
     </figure>
 
     <p>
@@ -1942,9 +1986,48 @@
       <figcaption>Figure 43. The training loss curve of the class-conditioned UNet without learning rate scheduler.</figcaption>
     </figure>
 
+    <figure class="figure-group">
+    <div class="subfigures">
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_noscheduler_generation_epoch0.png" alt="epoch 0">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_noscheduler_generation_epoch1.png" alt="epoch 1">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_noscheduler_generation_epoch2.png" alt="epoch 2">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_noscheduler_generation_epoch3.png" alt="epoch 3">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_noscheduler_generation_epoch4.png" alt="epoch 4">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_noscheduler_generation_epoch5.png" alt="epoch 5">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_noscheduler_generation_epoch6.png" alt="epoch 6">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_noscheduler_generation_epoch7.png" alt="epoch 7">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_noscheduler_generation_epoch8.png" alt="epoch 8">
+      </div>
+      <div class="subfigure">
+        <img src="plots/mnist_multi_step_guided2_noscheduler_generation_epoch9.png" alt="epoch 9">
+      </div>
+    </div>
+
+    <figcaption class="main-caption">
+      Figure 44 (a). The sampling results from the class-conditioned UNet without learning rate scheduler from 1 to 10 epochs.
+    </figcaption>
+    </figure>
+
     <figure style="text-align: center;">
       <img src="plots/denoising_class_conditioned_noscheduler.gif" alt="denoising_class_conditioned_noscheduler" style="width: 80%; display: block; margin: 0 auto;">
-      <figcaption>Figure 42. The sampling results from the class-conditioned UNet without learning rate scheduler from 1 to 10 epochs.</figcaption>
+      <figcaption>Figure 44 (b). The animation of the sampling results from the class-conditioned UNet without learning rate scheduler from 1 to 10 epochs.</figcaption>
     </figure>
 
 
